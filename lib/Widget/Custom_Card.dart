@@ -19,24 +19,41 @@ class CustomSliderCard extends StatefulWidget {
 }
 
 class _CustomSliderCardState extends State<CustomSliderCard> {
+  late double _currentValue = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentValue = widget.value;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(ratio.width * 10),
-      padding: EdgeInsets.all(ratio.width * 10),
+      margin: EdgeInsets.all(10),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: Colors.white,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min, // 추가된 코드
         children: [
           Text(widget.title,
               style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                   color: DelightColors.mainBlue)),
-          SliderPage(value1: widget.value),
+          SliderPage(
+            value1: _currentValue,
+            onChanged: (value) {
+              setState(() {
+                _currentValue = value;
+              });
+            },
+          ),
+          Text("${_currentValue.toStringAsFixed(2)}"), // 소수점 두 자리로 표시
         ],
       ),
     );
@@ -76,7 +93,7 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
         color: Colors.white,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(widget.title,
               style: TextStyle(
@@ -164,7 +181,7 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
         color: Colors.white,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(widget.title,
               style: TextStyle(
