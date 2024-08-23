@@ -111,7 +111,8 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue)),
+                      border: Border.all(width: 3, color: DelightColors.mainBlue),
+                      borderRadius: BorderRadius.circular(100)),
                   child: Icon(
                     CupertinoIcons.minus,
                     color: DelightColors.mainBlue,
@@ -132,7 +133,8 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue)),
+                      border: Border.all(width: 3, color: DelightColors.mainBlue),
+                      borderRadius: BorderRadius.circular(100)),
                   child: Icon(
                     CupertinoIcons.plus,
                     color: DelightColors.mainBlue,
@@ -199,7 +201,8 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue)),
+                      border: Border.all(width: 3, color: DelightColors.mainBlue),
+                  borderRadius: BorderRadius.circular(100)),
                   child: Icon(
                     CupertinoIcons.minus,
                     color: DelightColors.mainBlue,
@@ -220,7 +223,8 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue)),
+                      border: Border.all(width: 3, color: DelightColors.mainBlue),
+                      borderRadius: BorderRadius.circular(100)),
                   child: Icon(
                     CupertinoIcons.plus,
                     color: DelightColors.mainBlue,
