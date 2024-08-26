@@ -7,10 +7,12 @@ import 'Custom_Slider.dart';
 class CustomSliderCard extends StatefulWidget {
   final String title;
   final double value;
+  final ValueChanged<double> onChanged; // 콜백 추가
 
   CustomSliderCard({
     required this.title,
     required this.value,
+    required this.onChanged, // 콜백 초기화
     super.key,
   });
 
@@ -19,7 +21,7 @@ class CustomSliderCard extends StatefulWidget {
 }
 
 class _CustomSliderCardState extends State<CustomSliderCard> {
-  late double _currentValue = 1.0;
+  late double _currentValue;
 
   @override
   void initState() {
@@ -51,6 +53,7 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
               setState(() {
                 _currentValue = value;
               });
+              widget.onChanged(value); // 부모 위젯에 값 전달
             },
           ),
           Text("${_currentValue.toStringAsFixed(2)}"), // 소수점 두 자리로 표시
@@ -63,10 +66,12 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
 class CustomUpDownCard extends StatefulWidget {
   final String title;
   final int value;
+  final ValueChanged<int> onChanged; // 콜백 추가
 
   CustomUpDownCard({
     required this.title,
     required this.value,
+    required this.onChanged, // 콜백 초기화
     super.key,
   });
 
@@ -108,6 +113,7 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                   setState(() {
                     _currentValue -= 1;
                   });
+                  widget.onChanged(_currentValue); // 부모 위젯에 값 전달
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -130,6 +136,7 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                   setState(() {
                     _currentValue += 1;
                   });
+                  widget.onChanged(_currentValue); // 부모 위젯에 값 전달
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -153,10 +160,12 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
 class CustomUpDown2Card extends StatefulWidget {
   final String title;
   final double value;
+  final ValueChanged<double> onChanged; // 콜백 추가
 
   CustomUpDown2Card({
     required this.title,
     required this.value,
+    required this.onChanged, // 콜백 초기화
     super.key,
   });
 
@@ -198,11 +207,12 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                   setState(() {
                     _currentValue -= 1.0;
                   });
+                  widget.onChanged(_currentValue); // 부모 위젯에 값 전달
                 },
                 child: Container(
                   decoration: BoxDecoration(
                       border: Border.all(width: 3, color: DelightColors.mainBlue),
-                  borderRadius: BorderRadius.circular(100)),
+                      borderRadius: BorderRadius.circular(100)),
                   child: Icon(
                     CupertinoIcons.minus,
                     color: DelightColors.mainBlue,
@@ -220,6 +230,7 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                   setState(() {
                     _currentValue += 1.0;
                   });
+                  widget.onChanged(_currentValue); // 부모 위젯에 값 전달
                 },
                 child: Container(
                   decoration: BoxDecoration(
