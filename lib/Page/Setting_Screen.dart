@@ -92,24 +92,6 @@ class _SettingState extends State<Setting> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CustomSliderCard(
-                title: "진동세기",
-                value: settingsProvider.vibrationIntensity,
-                onChanged: (value) {
-                  setState(() {
-                    settingsProvider.vibrationIntensity = value;
-                    _updatePreferences('vibrationIntensity', value);
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-        Scaffold(
-          backgroundColor: Colors.white,
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CustomSliderCard(
                 title: "밝기",
                 value: settingsProvider.brightness,
                 onChanged: (value) {

@@ -1,6 +1,8 @@
 import 'package:delight/Config/color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:delight/Config/Setting_Provider.dart';
 import '../main.dart';
 import 'Custom_Slider.dart';
 
@@ -31,6 +33,8 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsProvider =
+    Provider.of<SettingsProvider>(context, listen: false);
     return Container(
       margin: EdgeInsets.all(10),
       padding: EdgeInsets.all(10),
@@ -44,7 +48,7 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
         children: [
           Text(widget.title,
               style: TextStyle(
-                  fontSize: 26,
+                  fontSize: settingsProvider.textSize,
                   fontWeight: FontWeight.bold,
                   color: DelightColors.mainBlue)),
           SliderPage(
@@ -90,6 +94,8 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsProvider =
+    Provider.of<SettingsProvider>(context, listen: false);
     return Container(
       margin: EdgeInsets.all(ratio.width * 10),
       padding: EdgeInsets.all(ratio.width * 10),
@@ -102,7 +108,7 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
         children: [
           Text(widget.title,
               style: TextStyle(
-                  fontSize: 26,
+                  fontSize: settingsProvider.textSize,
                   fontWeight: FontWeight.bold,
                   color: DelightColors.mainBlue)),
           Row(
@@ -184,6 +190,8 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsProvider =
+    Provider.of<SettingsProvider>(context, listen: false);
     return Container(
       margin: EdgeInsets.all(ratio.width * 10),
       padding: EdgeInsets.all(ratio.width * 10),
@@ -196,7 +204,7 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
         children: [
           Text(widget.title,
               style: TextStyle(
-                  fontSize: 26,
+                  fontSize: settingsProvider.textSize,
                   fontWeight: FontWeight.bold,
                   color: DelightColors.mainBlue)),
           Row(
