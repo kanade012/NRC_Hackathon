@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../Config/color.dart';
 import '../main.dart';
 
@@ -18,9 +21,6 @@ class _MainPageState extends State<MainPage> {
   int transitionTime = 3;
   double textSize = 14;
 
-  BluetoothDevice? connectedDevice;
-  BluetoothCharacteristic? characteristic;
-
   late Future<void> _loadSettingsFuture;
 
   @override
@@ -36,14 +36,6 @@ class _MainPageState extends State<MainPage> {
     transitionTime = prefs.getInt('transitionTime') ?? 3;
     textSize = prefs.getDouble('textSize') ?? 14.0;
   }
-
-  // Future<void> _saveSettings() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   await prefs.setDouble('vibration', vibration);
-  //   await prefs.setDouble('brightness', brightness);
-  //   await prefs.setInt('transitionTime', transitionTime);
-  //   await prefs.setDouble('textSize', textSize);
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -91,25 +83,15 @@ class _MainPageState extends State<MainPage> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 60),
                 child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("연결 상태 :",
-                          style: TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black)),
-                      SizedBox(
-                        width: ratio.width * 10,
-                      ),
-                      Text("200 OK",
-                          style: TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              color: DelightColors.mainBlue)),
-                    ],
-                  ),
-                ),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => BluetoothDeviceListScreen()));
+                      },
+                      child: Text("연결하러가기"),
+                    )),
               ),
             ),
             SizedBox(height: 50),
@@ -321,7 +303,8 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue)),
+                      border: Border.all(
+                          width: 3, color: DelightColors.mainBlue)),
                   child: Icon(
                     CupertinoIcons.minus,
                     color: DelightColors.mainBlue,
@@ -340,7 +323,8 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                 },
                 child: Container(
                     decoration: BoxDecoration(
-                        border: Border.all(width: 3, color: DelightColors.mainBlue)),
+                        border: Border.all(
+                            width: 3, color: DelightColors.mainBlue)),
                     child: Icon(
                       CupertinoIcons.plus,
                       color: DelightColors.mainBlue,
@@ -412,7 +396,8 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue)),
+                      border: Border.all(
+                          width: 3, color: DelightColors.mainBlue)),
                   child: Icon(
                     CupertinoIcons.minus,
                     color: DelightColors.mainBlue,
@@ -431,7 +416,8 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                 },
                 child: Container(
                     decoration: BoxDecoration(
-                        border: Border.all(width: 3, color: DelightColors.mainBlue)),
+                        border: Border.all(
+                            width: 3, color: DelightColors.mainBlue)),
                     child: Icon(
                       CupertinoIcons.plus,
                       color: DelightColors.mainBlue,
@@ -441,6 +427,140 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class BluetoothDeviceListScreen extends StatefulWidget {
+  @override
+  _BluetoothDeviceListScreenState createState() =>
+      _BluetoothDeviceListScreenState();
+}
+
+class _BluetoothDeviceListScreenState
+    extends State<BluetoothDeviceListScreen> {
+  final FlutterReactiveBle _ble = FlutterReactiveBle();
+  late StreamSubscription<DiscoveredDevice> _scanSubscription;
+  List<DiscoveredDevice> devicesList = [];
+  bool isScanning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    startScan();
+  }
+
+  @override
+  void dispose() {
+    _scanSubscription.cancel();
+    super.dispose();
+  }
+
+  void startScan() async {
+    // 권한 요청
+    bool permissionsGranted = await _requestPermissions();
+    if (!permissionsGranted) {
+      showMessage('Permissions not granted.');
+      return;
+    }
+
+    if (isScanning) return;
+
+    setState(() {
+      isScanning = true;
+      devicesList.clear();
+    });
+
+    _scanSubscription = _ble.scanForDevices(withServices: []).listen((device) {
+      if (!devicesList.any((d) => d.id == device.id)) {
+        setState(() {
+          devicesList.add(device);
+        });
+      }
+    }, onError: (error) {
+      showMessage('Scan error: $error');
+      stopScan();
+    });
+
+    Future.delayed(Duration(seconds: 5), () {
+      stopScan();
+    });
+  }
+
+  void stopScan() {
+    if (!isScanning) return;
+
+    _scanSubscription.cancel();
+    setState(() {
+      isScanning = false;
+    });
+  }
+
+  Future<bool> _requestPermissions() async {
+    final statuses = await [
+      Permission.bluetooth,
+      Permission.locationWhenInUse,
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+    ].request();
+
+    bool allGranted = statuses.values.every((status) => status.isGranted);
+
+    if (!allGranted) {
+      showMessage('One or more permissions were not granted: $statuses');
+    }
+
+    return allGranted;
+  }
+  void connectToDevice(DiscoveredDevice device) async {
+    try {
+      final connection = _ble.connectToDevice(id: device.id);
+      connection.listen(
+            (connectionState) {
+          if (connectionState.connectionState ==
+              DeviceConnectionState.connected) {
+            showMessage('Connected to ${device.name}');
+          } else if (connectionState.connectionState ==
+              DeviceConnectionState.disconnected) {
+            showMessage('Disconnected from ${device.name}');
+          }
+        },
+        onError: (error) {
+          showMessage('Connection error: $error');
+        },
+      );
+    } catch (e) {
+      showMessage('Failed to connect: $e');
+    }
+  }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Bluetooth Devices'),
+      ),
+      body: ListView.builder(
+        itemCount: devicesList.length,
+        itemBuilder: (context, index) {
+          final device = devicesList[index];
+          return ListTile(
+            title: Text(device.name.isNotEmpty ? device.name : 'Unknown Device'),
+            subtitle: Text(device.id),
+            onTap: () => connectToDevice(device),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => isScanning ? stopScan() : startScan(),
+        child: Icon(isScanning ? Icons.stop : Icons.search),
       ),
     );
   }

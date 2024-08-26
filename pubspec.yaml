@@ -47,7 +47,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
   shared_preferences: ^2.0.15
-  flutter_blue_plus: ^1.4.0
+  permission_handler: ^11.3.1
+  flutter_reactive_ble: ^5.3.1
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
