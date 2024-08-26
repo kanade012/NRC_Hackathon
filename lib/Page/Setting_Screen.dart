@@ -1,6 +1,8 @@
+import 'package:delight/Config/Setting_Provider.dart';
 import 'package:delight/Config/color.dart';
 import 'package:delight/Page/MainPage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Widget/Custom_Card.dart';
 import '../main.dart';
@@ -13,25 +15,23 @@ class Setting extends StatefulWidget {
 }
 
 class _SettingState extends State<Setting> {
-  double vibrationIntensity = 1.0;  // 진동 세기
-  double brightness = 1.0;          // 밝기
-  double textSize = 40.0;            // 텍스트 크기
-  int transitionTime = 1;            // 전환 시간
-
   @override
   void initState() {
     super.initState();
-    _loadPreferences();  // SharedPreferences에서 값을 불러옵니다.
+    _loadPreferences(); // SharedPreferences에서 값을 불러옵니다.
   }
 
   // SharedPreferences에서 저장된 값을 불러오는 함수
   Future<void> _loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    final settingsProvider =
+        Provider.of<SettingsProvider>(context, listen: false);
     setState(() {
-      vibrationIntensity = prefs.getDouble('vibrationIntensity') ?? 1.0;
-      brightness = prefs.getDouble('brightness') ?? 1.0;
-      textSize = prefs.getDouble('textSize') ?? 40.0;
-      transitionTime = prefs.getInt('transitionTime') ?? 1;
+      settingsProvider.vibrationIntensity =
+          prefs.getDouble('vibrationIntensity') ?? 1.0;
+      settingsProvider.brightness = prefs.getDouble('brightness') ?? 1.0;
+      settingsProvider.textSize = prefs.getDouble('textSize') ?? 40.0;
+      settingsProvider.transitionTime = prefs.getInt('transitionTime') ?? 1;
     });
   }
 
@@ -47,6 +47,8 @@ class _SettingState extends State<Setting> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsProvider =
+        Provider.of<SettingsProvider>(context, listen: false);
     return PageView(
       children: [
         GestureDetector(
@@ -59,10 +61,10 @@ class _SettingState extends State<Setting> {
             body: Container(
               child: Center(
                   child: Icon(
-                    Icons.arrow_back,
-                    size: ratio.width * 200,
-                    color: DelightColors.grey1,
-                  )),
+                Icons.arrow_back,
+                size: ratio.width * 200,
+                color: DelightColors.grey1,
+              )),
             ),
           ),
         ),
@@ -73,10 +75,28 @@ class _SettingState extends State<Setting> {
             children: [
               CustomSliderCard(
                 title: "진동세기",
-                value: vibrationIntensity,
+                value: settingsProvider.vibrationIntensity,
                 onChanged: (value) {
                   setState(() {
-                    vibrationIntensity = value;
+                    settingsProvider.vibrationIntensity = value;
+                    _updatePreferences('vibrationIntensity', value);
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        Scaffold(
+          backgroundColor: Colors.white,
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CustomSliderCard(
+                title: "진동세기",
+                value: settingsProvider.vibrationIntensity,
+                onChanged: (value) {
+                  setState(() {
+                    settingsProvider.vibrationIntensity = value;
                     _updatePreferences('vibrationIntensity', value);
                   });
                 },
@@ -91,10 +111,10 @@ class _SettingState extends State<Setting> {
             children: [
               CustomSliderCard(
                 title: "밝기",
-                value: brightness,
+                value: settingsProvider.brightness,
                 onChanged: (value) {
                   setState(() {
-                    brightness = value;
+                    settingsProvider.brightness = value;
                     _updatePreferences('brightness', value);
                   });
                 },
@@ -109,10 +129,10 @@ class _SettingState extends State<Setting> {
             children: [
               CustomUpDownCard(
                 title: "전환 시간",
-                value: transitionTime,
+                value: settingsProvider.transitionTime,
                 onChanged: (value) {
                   setState(() {
-                    transitionTime = value;
+                    settingsProvider.transitionTime = value;
                     _updatePreferences('transitionTime', value);
                   });
                 },
@@ -121,23 +141,22 @@ class _SettingState extends State<Setting> {
           ),
         ),
         Scaffold(
-          backgroundColor: Colors.white,
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CustomUpDown2Card(
-                title: "텍스트 크기",
-                value: textSize,
-                onChanged: (value) {
-                  setState(() {
-                    textSize = value;
-                    _updatePreferences('textSize', value);
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
+            backgroundColor: Colors.white,
+            body: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CustomUpDown2Card(
+                          title: "텍스트 크기",
+                          value: settingsProvider.textSize,
+                          onChanged: (value) {
+                setState(() {
+                  settingsProvider.textSize = value;
+                  _updatePreferences('textSize', value);
+                });
+                          },
+                        ),
+              ],
+            ))
       ],
     );
   }

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
+import 'package:delight/Config/Setting_Provider.dart';
 import 'Page/MainPage.dart';
 
 late Size ratio;
 
 void main() {
-  runApp(MyApp());
+  runApp(ChangeNotifierProvider(
+      create: (_) => SettingsProvider(),
+      child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
