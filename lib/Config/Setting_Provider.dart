@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SettingsProvider with ChangeNotifier {
   double _vibrationIntensity = 1.0;
   double _brightness = 1.0;
-  double _textSize = 40.0;
+  double _textSize = 26.0;
   int _transitionTime = 1;
 
   double get vibrationIntensity => _vibrationIntensity;
@@ -36,7 +36,7 @@ class SettingsProvider with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     vibrationIntensity = prefs.getDouble('vibrationIntensity') ?? 1.0;
     brightness = prefs.getDouble('brightness') ?? 1.0;
-    textSize = prefs.getDouble('textSize') ?? 40.0;
+    textSize = prefs.getDouble('textSize') ?? 26.0;
     transitionTime = prefs.getInt('transitionTime') ?? 1;
   }
 

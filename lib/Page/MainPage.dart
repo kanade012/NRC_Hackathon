@@ -29,7 +29,7 @@ class _MainPageState extends State<MainPage> {
       settingsProvider.vibrationIntensity =
           prefs.getDouble('vibrationIntensity') ?? 1.0;
       settingsProvider.brightness = prefs.getDouble('brightness') ?? 1.0;
-      settingsProvider.textSize = prefs.getDouble('textSize') ?? 40.0;
+      settingsProvider.textSize = prefs.getDouble('textSize') ?? 26.0;
       settingsProvider.transitionTime = prefs.getInt('transitionTime') ?? 1;
     });
   }
