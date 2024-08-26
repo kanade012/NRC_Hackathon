@@ -43,6 +43,7 @@ class _AlarmState extends State<Alarm> {
   void _getTime() {
     final DateTime now = DateTime.now();
     final String formattedTime = _formatTime(now);
+    if (mounted)
     setState(() {
       _timeString = formattedTime;
     });
@@ -85,7 +86,7 @@ class _AlarmState extends State<Alarm> {
               Text(
                 "Knock",
                 style: TextStyle(
-                    fontSize: ratio.height * settingsProvider.textSize,
+                    fontSize: settingsProvider.textSize,
                     color: DelightColors.grey1,
                     fontWeight: FontWeight.w900),
               ),
