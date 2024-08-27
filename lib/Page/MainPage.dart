@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:delight/Config/color.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:screen_brightness/screen_brightness.dart';
 import '../Config/Setting_Provider.dart';
 import 'Alarm_Screen.dart';
 import 'Setting_Screen.dart';
@@ -21,6 +22,7 @@ class _MainPageState extends State<MainPage> {
   }
 
   // SharedPreferences에서 저장된 값을 불러오는 함수
+  // SharedPreferences에서 저장된 값을 불러오는 함수
   Future<void> _loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final settingsProvider =
@@ -32,6 +34,21 @@ class _MainPageState extends State<MainPage> {
       settingsProvider.textSize = prefs.getDouble('textSize') ?? 26.0;
       settingsProvider.transitionTime = prefs.getInt('transitionTime') ?? 1;
     });
+
+    // 화면 밝기를 설정합니다.
+    _updateBrightness(settingsProvider.brightness);
+  }
+
+  // 화면 밝기를 업데이트하는 함수
+  Future<void> _updateBrightness(double brightness) async {
+    try {
+      // brightness 값을 0.0 ~ 1.0 범위로 조정
+      double normalizedBrightness = brightness / 10.0;
+
+      await ScreenBrightness().setScreenBrightness(normalizedBrightness);
+    } catch (e) {
+      print("Failed to set brightness: $e");
+    }
   }
   @override
   Widget build(BuildContext context) {

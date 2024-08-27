@@ -49,6 +49,7 @@ dev_dependencies:
   vibration: ^2.0.0
   shared_preferences: ^2.0.15
   provider: ^6.1.2
+  screen_brightness: ^1.0.1
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

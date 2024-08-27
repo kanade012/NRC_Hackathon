@@ -4,6 +4,7 @@ import 'package:delight/Page/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:screen_brightness/screen_brightness.dart'; // 추가
 import '../Widget/Custom_Card.dart';
 import '../main.dart';
 
@@ -25,7 +26,7 @@ class _SettingState extends State<Setting> {
   Future<void> _loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final settingsProvider =
-        Provider.of<SettingsProvider>(context, listen: false);
+    Provider.of<SettingsProvider>(context, listen: false);
     setState(() {
       settingsProvider.vibrationIntensity =
           prefs.getDouble('vibrationIntensity') ?? 1.0;
@@ -33,6 +34,21 @@ class _SettingState extends State<Setting> {
       settingsProvider.textSize = prefs.getDouble('textSize') ?? 26.0;
       settingsProvider.transitionTime = prefs.getInt('transitionTime') ?? 1;
     });
+
+    // 화면 밝기를 설정합니다.
+    _updateBrightness(settingsProvider.brightness);
+  }
+
+  // 화면 밝기를 업데이트하는 함수
+  Future<void> _updateBrightness(double brightness) async {
+    try {
+      // brightness 값을 0.0 ~ 1.0 범위로 조정
+      double normalizedBrightness = brightness / 10.0;
+
+      await ScreenBrightness().setScreenBrightness(normalizedBrightness);
+    } catch (e) {
+      print("Failed to set brightness: $e");
+    }
   }
 
   // SharedPreferences에 값을 저장하는 함수
@@ -48,7 +64,7 @@ class _SettingState extends State<Setting> {
   @override
   Widget build(BuildContext context) {
     final settingsProvider =
-        Provider.of<SettingsProvider>(context, listen: false);
+    Provider.of<SettingsProvider>(context, listen: false);
     return PageView(
       children: [
         GestureDetector(
@@ -61,10 +77,10 @@ class _SettingState extends State<Setting> {
             body: Container(
               child: Center(
                   child: Icon(
-                Icons.arrow_back,
-                size: ratio.width * 200,
-                color: DelightColors.grey1,
-              )),
+                    Icons.arrow_back,
+                    size: ratio.width * 200,
+                    color: DelightColors.grey1,
+                  )),
             ),
           ),
         ),
@@ -98,6 +114,7 @@ class _SettingState extends State<Setting> {
                   setState(() {
                     settingsProvider.brightness = value;
                     _updatePreferences('brightness', value);
+                    _updateBrightness(value); // 밝기 업데이트
                   });
                 },
               ),
@@ -128,15 +145,15 @@ class _SettingState extends State<Setting> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CustomUpDown2Card(
-                          title: "텍스트 크기",
-                          value: settingsProvider.textSize,
-                          onChanged: (value) {
-                setState(() {
-                  settingsProvider.textSize = value;
-                  _updatePreferences('textSize', value);
-                });
-                          },
-                        ),
+                  title: "텍스트 크기",
+                  value: settingsProvider.textSize,
+                  onChanged: (value) {
+                    setState(() {
+                      settingsProvider.textSize = value;
+                      _updatePreferences('textSize', value);
+                    });
+                  },
+                ),
               ],
             ))
       ],
