@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:screen_brightness/screen_brightness.dart';
+import 'package:vibration/vibration.dart';
 import '../Config/Setting_Provider.dart';
 import '../Config/color.dart';
 import '../main.dart';
@@ -28,7 +29,6 @@ class _AlarmState extends State<Alarm> {
   }
 
   // SharedPreferences에서 저장된 값을 불러오는 함수
-  // SharedPreferences에서 저장된 값을 불러오는 함수
   Future<void> _loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final settingsProvider =
@@ -40,7 +40,15 @@ class _AlarmState extends State<Alarm> {
       settingsProvider.textSize = prefs.getDouble('textSize') ?? 26.0;
       settingsProvider.transitionTime = prefs.getInt('transitionTime') ?? 1;
     });
-
+    ///진동 기능
+    // if (await Vibration.hasVibrator() ?? false) {
+    //   int power = (settingsProvider.vibrationIntensity * 1000).round();
+    //   Vibration.vibrate(duration: power);
+    // } else {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(content: Text("진동 기능이 없습니다")),
+    //   );
+    // }
     // 화면 밝기를 설정합니다.
     _updateBrightness(settingsProvider.brightness);
   }
