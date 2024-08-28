@@ -18,6 +18,7 @@ class BluetoothManager with ChangeNotifier {
           if (connectionState.connectionState == DeviceConnectionState.connected) {
             connectedDevice = device;
             isConnected = true;
+            _discoverServices(device); // 서비스 탐색 및 특성 설정
             notifyListeners();
           } else if (connectionState.connectionState == DeviceConnectionState.disconnected) {
             connectedDevice = null;
@@ -40,10 +41,36 @@ class BluetoothManager with ChangeNotifier {
     }
   }
 
-  // connectedCharacteristic Getter
+  Future<void> _discoverServices(DiscoveredDevice device) async {
+    try {
+      final services = await _ble.discoverServices(device.id);
+
+      for (var service in services) {
+        print("Service: ${service.serviceId}");
+        for (var characteristic in service.characteristics) {
+          print("Characteristic: ${characteristic.characteristicId}");
+
+          // 특성에 쓰기 권한이 있는지 확인
+          if (characteristic.isWritableWithResponse || characteristic.isWritableWithoutResponse) {
+            _characteristic = QualifiedCharacteristic(
+              serviceId: service.serviceId,
+              characteristicId: characteristic.characteristicId,
+              deviceId: device.id,
+            );
+            print("Writable characteristic found and set: ${characteristic.characteristicId}");
+            return; // 특성을 찾으면 더 이상 탐색하지 않음
+          }
+        }
+      }
+
+      print("No writable characteristic found.");
+    } catch (e) {
+      print("Service discovery error: $e");
+    }
+  }
+
   QualifiedCharacteristic? get connectedCharacteristic => _characteristic;
 
-  // writeData 메서드
   Future<void> writeData(String data) async {
     if (_characteristic != null) {
       try {

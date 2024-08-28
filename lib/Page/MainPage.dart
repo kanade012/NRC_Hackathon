@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,10 +32,71 @@ class _MainPageState extends State<MainPage> {
 
   Future<void> _loadSettings() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    vibration = prefs.getDouble('vibration') ?? 1.0;
-    brightness = prefs.getDouble('brightness') ?? 1.0;
-    transitionTime = prefs.getInt('transitionTime') ?? 3;
-    textSize = prefs.getDouble('textSize') ?? 14.0;
+    setState(() {
+      vibration = prefs.getDouble('vibration') ?? 1.0;
+      brightness = prefs.getDouble('brightness') ?? 1.0;
+      transitionTime = prefs.getInt('transitionTime') ?? 3;
+      textSize = prefs.getDouble('textSize') ?? 14.0;
+    });
+  }
+
+  Future<void> _sendDataToArduino(String data) async {
+    final bluetoothManager = Provider.of<BluetoothManager>(context, listen: false);
+    if (bluetoothManager.isConnected) {
+      final characteristic = bluetoothManager.connectedCharacteristic;
+      if (characteristic != null) {
+        await bluetoothManager.writeData(data);
+      } else {
+        print("Characteristic is null.");
+      }
+    } else {
+      print("Bluetooth is not connected.");
+    }
+  }
+
+  Future<void> _uploadAllSettings() async {
+    await _loadSettings();
+    await _sendDataToArduino("vibration:$vibration");
+    await _sendDataToArduino("brightness:$brightness");
+    await _sendDataToArduino("transitionTime:$transitionTime");
+    await _sendDataToArduino("textSize:$textSize");
+    print("All settings uploaded");
+  }
+
+  void _updateVibration(double value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('vibration', value);
+    await _sendDataToArduino("vibration:$value");
+    setState(() {
+      vibration = value;
+    });
+  }
+
+  void _updateBrightness(double value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('brightness', value);
+    await _sendDataToArduino("brightness:$value");
+    setState(() {
+      brightness = value;
+    });
+  }
+
+  void _updateTransitionTime(int value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('transitionTime', value);
+    await _sendDataToArduino("transitionTime:$value");
+    setState(() {
+      transitionTime = value;
+    });
+  }
+
+  void _updateTextSize(double value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('textSize', value);
+    await _sendDataToArduino("textSize:$value");
+    setState(() {
+      textSize = value;
+    });
   }
 
   @override
@@ -97,7 +157,7 @@ class _MainPageState extends State<MainPage> {
                     ),
                     if (bluetoothManager.isConnected)
                       GestureDetector(
-                        onTap: () async{
+                        onTap: () async {
                           await _loadSettings();
                           await bluetoothManager.disconnectDevice();
                         },
@@ -106,8 +166,8 @@ class _MainPageState extends State<MainPage> {
                           child: Container(
                             padding: EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              border: Border.all(width: 2,color: DelightColors.mainBlue),
-                              borderRadius: BorderRadius.circular(5)
+                                border: Border.all(width: 2, color: DelightColors.mainBlue),
+                                borderRadius: BorderRadius.circular(5)
                             ),
                             child: Text(
                               bluetoothManager.connectedDevice?.name ?? "Unknown",
@@ -122,16 +182,18 @@ class _MainPageState extends State<MainPage> {
                     else
                       Center(
                         child: GestureDetector(
-                          onTap: () async{
+                          onTap: () async {
                             await _loadSettings();
                             await bluetoothManager.disconnectDevice();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    BluetoothDeviceListScreen(),
+                                builder: (context) => BluetoothDeviceListScreen(
+                                  onDeviceConnected: _uploadAllSettings,
+                                ),
                               ),
                             );
+
                           },
                           child: Padding(
                             padding: EdgeInsets.only(top: ratio.height * 7),
@@ -145,7 +207,7 @@ class _MainPageState extends State<MainPage> {
                                 ),
                               ),
                               decoration: BoxDecoration(
-                                  border: Border.all(width: 2,color: DelightColors.mainBlue),
+                                  border: Border.all(width: 2, color: DelightColors.mainBlue),
                                   borderRadius: BorderRadius.circular(5)
                               ),
                             ),
@@ -176,10 +238,10 @@ class _MainPageState extends State<MainPage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    CustomSliderCard(title: "진동", value: vibration),
-                    CustomSlider2Card(title: "밝기", value: brightness),
-                    CustomUpDownCard(title: "전환 시간", value: transitionTime),
-                    CustomUpDown2Card(title: "텍스트 크기", value: textSize),
+                    CustomSliderCard(title: "진동", value: vibration, onChanged: _updateVibration),
+                    CustomSlider2Card(title: "밝기", value: brightness, onChanged: _updateBrightness),
+                    CustomUpDownCard(title: "전환 시간", value: transitionTime, onChanged: _updateTransitionTime),
+                    CustomUpDown2Card(title: "텍스트 크기", value: textSize, onChanged: _updateTextSize),
                   ],
                 ),
               ),
@@ -191,13 +253,16 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
+
 class CustomSliderCard extends StatefulWidget {
   final String title;
-  double value;
+  final double value;
+  final ValueChanged<double> onChanged;
 
   CustomSliderCard({
     required this.title,
     required this.value,
+    required this.onChanged,
     super.key,
   });
 
@@ -206,15 +271,6 @@ class CustomSliderCard extends StatefulWidget {
 }
 
 class _CustomSliderCardState extends State<CustomSliderCard> {
-  void _updateVibration(double value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('vibration', value);
-    if(mounted)
-    setState(() {
-      widget.value = value;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -239,9 +295,7 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
             max: 10,
             label: widget.value.round().toString(),
             divisions: 10,
-            onChanged: (value) {
-              _updateVibration(value);
-            },
+            onChanged: widget.onChanged,
           ),
         ],
       ),
@@ -251,11 +305,13 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
 
 class CustomSlider2Card extends StatefulWidget {
   final String title;
-  double value;
+  final double value;
+  final ValueChanged<double> onChanged;
 
   CustomSlider2Card({
     required this.title,
     required this.value,
+    required this.onChanged,
     super.key,
   });
 
@@ -264,15 +320,6 @@ class CustomSlider2Card extends StatefulWidget {
 }
 
 class _CustomSlider2CardState extends State<CustomSlider2Card> {
-  void _updateBrightness(double value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('brightness', value);
-    if(mounted)
-    setState(() {
-      widget.value = value;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -297,9 +344,7 @@ class _CustomSlider2CardState extends State<CustomSlider2Card> {
             max: 10,
             label: widget.value.round().toString(),
             divisions: 10,
-            onChanged: (value) {
-              _updateBrightness(value);
-            },
+            onChanged: widget.onChanged,
           ),
         ],
       ),
@@ -310,10 +355,12 @@ class _CustomSlider2CardState extends State<CustomSlider2Card> {
 class CustomUpDownCard extends StatefulWidget {
   final String title;
   final int value;
+  final ValueChanged<int> onChanged;
 
   CustomUpDownCard({
     required this.title,
     required this.value,
+    required this.onChanged,
     super.key,
   });
 
@@ -328,15 +375,6 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
   void initState() {
     super.initState();
     _currentValue = widget.value;
-  }
-
-  void _updateTransitionTime(int value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('transitionTime', value);
-    if(mounted)
-    setState(() {
-      _currentValue = value;
-    });
   }
 
   @override
@@ -362,13 +400,15 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
               GestureDetector(
                 onTap: () {
                   if (_currentValue > 0) {
-                    _updateTransitionTime(_currentValue - 1);
+                    setState(() {
+                      _currentValue--;
+                    });
+                    widget.onChanged(_currentValue);
                   }
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border:
-                          Border.all(width: 3, color: DelightColors.mainBlue)),
+                      border: Border.all(width: 3, color: DelightColors.mainBlue)),
                   child: Icon(
                     CupertinoIcons.minus,
                     color: DelightColors.mainBlue,
@@ -383,12 +423,14 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                   )),
               GestureDetector(
                 onTap: () {
-                  _updateTransitionTime(_currentValue + 1);
+                  setState(() {
+                    _currentValue++;
+                  });
+                  widget.onChanged(_currentValue);
                 },
                 child: Container(
                     decoration: BoxDecoration(
-                        border: Border.all(
-                            width: 3, color: DelightColors.mainBlue)),
+                        border: Border.all(width: 3, color: DelightColors.mainBlue)),
                     child: Icon(
                       CupertinoIcons.plus,
                       color: DelightColors.mainBlue,
@@ -406,10 +448,12 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
 class CustomUpDown2Card extends StatefulWidget {
   final String title;
   final double value;
+  final ValueChanged<double> onChanged;
 
   CustomUpDown2Card({
     required this.title,
     required this.value,
+    required this.onChanged,
     super.key,
   });
 
@@ -424,15 +468,6 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
   void initState() {
     super.initState();
     _currentValue = widget.value;
-  }
-
-  void _updateTextSize(double value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('textSize', value);
-    if(mounted)
-    setState(() {
-      _currentValue = value;
-    });
   }
 
   @override
@@ -457,12 +492,16 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
             children: [
               GestureDetector(
                 onTap: () {
-                  _updateTextSize(_currentValue - 1.0);
+                  if (_currentValue > 1) {
+                    setState(() {
+                      _currentValue--;
+                    });
+                    widget.onChanged(_currentValue);
+                  }
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border:
-                          Border.all(width: 3, color: DelightColors.mainBlue)),
+                      border: Border.all(width: 3, color: DelightColors.mainBlue)),
                   child: Icon(
                     CupertinoIcons.minus,
                     color: DelightColors.mainBlue,
@@ -477,12 +516,14 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                   )),
               GestureDetector(
                 onTap: () {
-                  _updateTextSize(_currentValue + 1.0);
+                  setState(() {
+                    _currentValue++;
+                  });
+                  widget.onChanged(_currentValue);
                 },
                 child: Container(
                     decoration: BoxDecoration(
-                        border: Border.all(
-                            width: 3, color: DelightColors.mainBlue)),
+                        border: Border.all(width: 3, color: DelightColors.mainBlue)),
                     child: Icon(
                       CupertinoIcons.plus,
                       color: DelightColors.mainBlue,
@@ -498,9 +539,12 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
 }
 
 class BluetoothDeviceListScreen extends StatefulWidget {
+  final VoidCallback onDeviceConnected;
+
+  BluetoothDeviceListScreen({required this.onDeviceConnected});
+
   @override
-  _BluetoothDeviceListScreenState createState() =>
-      _BluetoothDeviceListScreenState();
+  _BluetoothDeviceListScreenState createState() => _BluetoothDeviceListScreenState();
 }
 
 class _BluetoothDeviceListScreenState extends State<BluetoothDeviceListScreen> {
@@ -535,18 +579,18 @@ class _BluetoothDeviceListScreenState extends State<BluetoothDeviceListScreen> {
   }
 
   void startScan() {
-    if(mounted)
-    setState(() {
-      isScanning = true;
-      devicesList.clear();
-    });
+    if (mounted)
+      setState(() {
+        isScanning = true;
+        devicesList.clear();
+      });
 
     _scanSubscription = _ble.scanForDevices(withServices: []).listen((device) {
       if (!devicesList.any((d) => d.id == device.id)) {
-        if(mounted)
-        setState(() {
-          devicesList.add(device);
-        });
+        if (mounted)
+          setState(() {
+            devicesList.add(device);
+          });
       }
     }, onError: (error) {
       showMessage('Scan error: $error');
@@ -562,10 +606,10 @@ class _BluetoothDeviceListScreenState extends State<BluetoothDeviceListScreen> {
     if (!isScanning) return;
 
     _scanSubscription.cancel();
-    if(mounted)
-    setState(() {
-      isScanning = false;
-    });
+    if (mounted)
+      setState(() {
+        isScanning = false;
+      });
   }
 
   void showMessage(String message) {
@@ -595,8 +639,7 @@ class _BluetoothDeviceListScreenState extends State<BluetoothDeviceListScreen> {
           final isConnected = bluetoothManager.connectedDevice?.id == device.id;
 
           return ListTile(
-            title:
-            Text(device.name.isNotEmpty ? device.name : 'Unknown Device'),
+            title: Text(device.name.isNotEmpty ? device.name : 'Unknown Device'),
             subtitle: Text(device.id),
             trailing: isConnected ? Icon(Icons.link, color: Colors.green) : null,
             onTap: () async {
@@ -610,6 +653,7 @@ class _BluetoothDeviceListScreenState extends State<BluetoothDeviceListScreen> {
               } else {
                 bool success = await bluetoothManager.connectToDevice(device);
                 if (success) {
+                  widget.onDeviceConnected();  // Call the passed callback
                   showMessage('${device.name.isNotEmpty ? device.name : 'Device'} connected');
                 } else {
                   showMessage('Failed to connect to ${device.name.isNotEmpty ? device.name : 'Device'}');
