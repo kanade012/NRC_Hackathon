@@ -98,10 +98,11 @@ class _MainPageState extends State<MainPage> {
                     if (bluetoothManager.isConnected)
                       GestureDetector(
                         onTap: () async{
+                          await _loadSettings();
                           await bluetoothManager.disconnectDevice();
                         },
                         child: Padding(
-                          padding: EdgeInsets.only(top: ratio.width * 7),
+                          padding: EdgeInsets.only(top: ratio.height * 7),
                           child: Container(
                             padding: EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -122,6 +123,7 @@ class _MainPageState extends State<MainPage> {
                       Center(
                         child: GestureDetector(
                           onTap: () async{
+                            await _loadSettings();
                             await bluetoothManager.disconnectDevice();
                             Navigator.push(
                               context,
@@ -131,17 +133,21 @@ class _MainPageState extends State<MainPage> {
                               ),
                             );
                           },
-                          child: Container(
-                            padding: EdgeInsets.all(ratio.width * 10),
-                            child: Text(
-                              "연결하러가기",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            decoration: BoxDecoration(
-                              color: DelightColors.mainBlue,
-                              borderRadius: BorderRadius.circular(5),
+                          child: Padding(
+                            padding: EdgeInsets.only(top: ratio.height * 7),
+                            child: Container(
+                              padding: EdgeInsets.all(ratio.width * 10),
+                              child: Text(
+                                "연결하러가기",
+                                style: TextStyle(
+                                  color: DelightColors.mainBlue,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              decoration: BoxDecoration(
+                                  border: Border.all(width: 2,color: DelightColors.mainBlue),
+                                  borderRadius: BorderRadius.circular(5)
+                              ),
                             ),
                           ),
                         ),
