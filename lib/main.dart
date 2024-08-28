@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'Config/bluetooth_provider.dart';
 import 'Page/MainPage.dart';
+import 'package:provider/provider.dart';
 
 late Size ratio;
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => BluetoothManager(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

@@ -4,7 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:delight/Config/bluetooth_provider.dart';
 import '../Config/color.dart';
 import '../main.dart';
 
@@ -48,7 +50,7 @@ class _MainPageState extends State<MainPage> {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
             } else {
-              return _buildSettingsUI();
+              return _buildSettingsUI(context);
             }
           },
         ),
@@ -56,7 +58,9 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Widget _buildSettingsUI() {
+  Widget _buildSettingsUI(BuildContext context) {
+    final bluetoothManager = Provider.of<BluetoothManager>(context);
+
     return Padding(
       padding: EdgeInsets.all(ratio.width * 15),
       child: SingleChildScrollView(
@@ -78,23 +82,75 @@ class _MainPageState extends State<MainPage> {
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.white),
+                  borderRadius: BorderRadius.circular(12), color: Colors.white),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 60),
-                child: Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => BluetoothDeviceListScreen()));
-                      },
-                      child: Text("연결하러가기"),
-                    )),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "연결상태 :",
+                      style: TextStyle(fontSize: 24),
+                    ),
+                    SizedBox(
+                      width: ratio.width * 10,
+                    ),
+                    if (bluetoothManager.isConnected)
+                      GestureDetector(
+                        onTap: () async{
+                          await bluetoothManager.disconnectDevice();
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.only(top: ratio.width * 7),
+                          child: Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              border: Border.all(width: 2,color: DelightColors.mainBlue),
+                              borderRadius: BorderRadius.circular(5)
+                            ),
+                            child: Text(
+                              bluetoothManager.connectedDevice?.name ?? "Unknown",
+                              style: TextStyle(
+                                color: DelightColors.mainBlue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Center(
+                        child: GestureDetector(
+                          onTap: () async{
+                            await bluetoothManager.disconnectDevice();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    BluetoothDeviceListScreen(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(ratio.width * 10),
+                            child: Text(
+                              "연결하러가기",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            decoration: BoxDecoration(
+                              color: DelightColors.mainBlue,
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 50),
+            SizedBox(height: ratio.height * 15),
             Align(
               alignment: Alignment.bottomLeft,
               child: Text("설정 관리",
@@ -110,8 +166,7 @@ class _MainPageState extends State<MainPage> {
               width: double.infinity,
               height: ratio.height * 490,
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.white),
+                  borderRadius: BorderRadius.circular(12), color: Colors.white),
               child: SingleChildScrollView(
                 child: Column(
                   children: [
@@ -148,6 +203,7 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
   void _updateVibration(double value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('vibration', value);
+    if(mounted)
     setState(() {
       widget.value = value;
     });
@@ -205,6 +261,7 @@ class _CustomSlider2CardState extends State<CustomSlider2Card> {
   void _updateBrightness(double value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('brightness', value);
+    if(mounted)
     setState(() {
       widget.value = value;
     });
@@ -270,6 +327,7 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
   void _updateTransitionTime(int value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setInt('transitionTime', value);
+    if(mounted)
     setState(() {
       _currentValue = value;
     });
@@ -303,8 +361,8 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border: Border.all(
-                          width: 3, color: DelightColors.mainBlue)),
+                      border:
+                          Border.all(width: 3, color: DelightColors.mainBlue)),
                   child: Icon(
                     CupertinoIcons.minus,
                     color: DelightColors.mainBlue,
@@ -365,6 +423,7 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
   void _updateTextSize(double value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('textSize', value);
+    if(mounted)
     setState(() {
       _currentValue = value;
     });
@@ -396,8 +455,8 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      border: Border.all(
-                          width: 3, color: DelightColors.mainBlue)),
+                      border:
+                          Border.all(width: 3, color: DelightColors.mainBlue)),
                   child: Icon(
                     CupertinoIcons.minus,
                     color: DelightColors.mainBlue,
@@ -438,8 +497,7 @@ class BluetoothDeviceListScreen extends StatefulWidget {
       _BluetoothDeviceListScreenState();
 }
 
-class _BluetoothDeviceListScreenState
-    extends State<BluetoothDeviceListScreen> {
+class _BluetoothDeviceListScreenState extends State<BluetoothDeviceListScreen> {
   final FlutterReactiveBle _ble = FlutterReactiveBle();
   late StreamSubscription<DiscoveredDevice> _scanSubscription;
   List<DiscoveredDevice> devicesList = [];
@@ -448,25 +506,30 @@ class _BluetoothDeviceListScreenState
   @override
   void initState() {
     super.initState();
-    startScan();
+    _checkPermissionsAndStartScan();
   }
 
-  @override
-  void dispose() {
-    _scanSubscription.cancel();
-    super.dispose();
-  }
-
-  void startScan() async {
-    // 권한 요청
-    bool permissionsGranted = await _requestPermissions();
-    if (!permissionsGranted) {
-      showMessage('Permissions not granted.');
-      return;
+  Future<void> _checkPermissionsAndStartScan() async {
+    if (await _requestPermissions()) {
+      startScan();
+    } else {
+      startScan();
     }
+  }
 
-    if (isScanning) return;
+  Future<bool> _requestPermissions() async {
+    final status = await [
+      Permission.location,
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+    ].request();
 
+    return status.values.every((status) => status.isGranted);
+  }
+
+  void startScan() {
+    if(mounted)
     setState(() {
       isScanning = true;
       devicesList.clear();
@@ -474,6 +537,7 @@ class _BluetoothDeviceListScreenState
 
     _scanSubscription = _ble.scanForDevices(withServices: []).listen((device) {
       if (!devicesList.any((d) => d.id == device.id)) {
+        if(mounted)
         setState(() {
           devicesList.add(device);
         });
@@ -492,47 +556,10 @@ class _BluetoothDeviceListScreenState
     if (!isScanning) return;
 
     _scanSubscription.cancel();
+    if(mounted)
     setState(() {
       isScanning = false;
     });
-  }
-
-  Future<bool> _requestPermissions() async {
-    final statuses = await [
-      Permission.bluetooth,
-      Permission.locationWhenInUse,
-      Permission.bluetoothConnect,
-      Permission.bluetoothScan,
-    ].request();
-
-    bool allGranted = statuses.values.every((status) => status.isGranted);
-
-    if (!allGranted) {
-      showMessage('One or more permissions were not granted: $statuses');
-    }
-
-    return allGranted;
-  }
-  void connectToDevice(DiscoveredDevice device) async {
-    try {
-      final connection = _ble.connectToDevice(id: device.id);
-      connection.listen(
-            (connectionState) {
-          if (connectionState.connectionState ==
-              DeviceConnectionState.connected) {
-            showMessage('Connected to ${device.name}');
-          } else if (connectionState.connectionState ==
-              DeviceConnectionState.disconnected) {
-            showMessage('Disconnected from ${device.name}');
-          }
-        },
-        onError: (error) {
-          showMessage('Connection error: $error');
-        },
-      );
-    } catch (e) {
-      showMessage('Failed to connect: $e');
-    }
   }
 
   void showMessage(String message) {
@@ -542,25 +569,54 @@ class _BluetoothDeviceListScreenState
   }
 
   @override
+  void dispose() {
+    _scanSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bluetoothManager = Provider.of<BluetoothManager>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bluetooth Devices'),
+        title: Text('기기 검색'),
       ),
       body: ListView.builder(
         itemCount: devicesList.length,
         itemBuilder: (context, index) {
           final device = devicesList[index];
+          final isConnected = bluetoothManager.connectedDevice?.id == device.id;
+
           return ListTile(
-            title: Text(device.name.isNotEmpty ? device.name : 'Unknown Device'),
+            title:
+            Text(device.name.isNotEmpty ? device.name : 'Unknown Device'),
             subtitle: Text(device.id),
-            onTap: () => connectToDevice(device),
+            trailing: isConnected ? Icon(Icons.link, color: Colors.green) : null,
+            onTap: () async {
+              if (isConnected) {
+                bool success = await bluetoothManager.disconnectDevice();
+                if (success) {
+                  showMessage('${device.name.isNotEmpty ? device.name : 'Device'} disconnected');
+                } else {
+                  showMessage('Failed to disconnect from ${device.name.isNotEmpty ? device.name : 'Device'}');
+                }
+              } else {
+                bool success = await bluetoothManager.connectToDevice(device);
+                if (success) {
+                  showMessage('${device.name.isNotEmpty ? device.name : 'Device'} connected');
+                } else {
+                  showMessage('Failed to connect to ${device.name.isNotEmpty ? device.name : 'Device'}');
+                }
+              }
+            },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: DelightColors.mainBlue,
         onPressed: () => isScanning ? stopScan() : startScan(),
-        child: Icon(isScanning ? Icons.stop : Icons.search),
+        child: Icon(isScanning ? Icons.stop : Icons.search, color: Colors.white,),
       ),
     );
   }
