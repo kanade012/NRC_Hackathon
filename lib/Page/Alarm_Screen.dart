@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +32,7 @@ class _AlarmState extends State<Alarm> {
   bool _isRecording = false;
   Timer? _timer;
   StreamController<Food> _streamController = StreamController<Food>();
+  final List<List<double>> _recentPredictions = [];
 
   @override
   void initState() {
@@ -41,7 +43,7 @@ class _AlarmState extends State<Alarm> {
     Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
   }
 
-  void _initializeInterpreter() async {
+  Future<void> _initializeInterpreter() async {
     try {
       _interpreter = await Interpreter.fromAsset('soundAnalyzer.tflite');
       _inputBuffer = TensorBuffer.createFixedSize([1, 1640], TfLiteType.float32);
@@ -85,18 +87,23 @@ class _AlarmState extends State<Alarm> {
     Float32List floatBuffer = _convertToFloat32(pcmData);
 
     if (floatBuffer.length < 1640) {
-      print("Padding floatBuffer from ${floatBuffer.length} to 1640 samples");
       floatBuffer = Float32List.fromList(
           floatBuffer.toList() + List.filled(1640 - floatBuffer.length, 0.0));
     } else if (floatBuffer.length > 1640) {
-      print("Trimming floatBuffer from ${floatBuffer.length} to 1640 samples");
       floatBuffer = floatBuffer.sublist(0, 1640);
     }
 
     _inputBuffer.loadList(floatBuffer, shape: [1, 1640]);
     _interpreter.run(_inputBuffer.buffer, _outputBuffer.buffer);
 
-    var outputData = _outputBuffer.getDoubleList();
+    List<double> outputData = _outputBuffer.getDoubleList();
+    print("Model output: $outputData");  // 모델 출력 결과를 콘솔에 출력
+
+    outputData = _applySoftmax(outputData);
+
+    _recentPredictions.add(outputData);
+    if (_recentPredictions.length > 5) _recentPredictions.removeAt(0);
+
     _handleModelOutput(outputData);
   }
 
@@ -105,15 +112,25 @@ class _AlarmState extends State<Alarm> {
     for (int i = 0; i < pcmData.length; i += 2) {
       buffer[i ~/ 2] = (pcmData[i] | pcmData[i + 1] << 8).toSigned(16).toDouble() / 32768.0;
     }
-
-    print("PCM to Float32 conversion complete: ${buffer.length} samples");
     return buffer;
   }
 
-  void _handleModelOutput(List<double> outputData) {
-    print("Model output: $outputData");
+  List<double> _applySoftmax(List<double> logits) {
+    double maxLogit = logits.reduce((a, b) => a > b ? a : b);
+    double sumExp = logits.fold(0.0, (sum, logit) => sum + exp(logit - maxLogit));
+    return logits.map((logit) => exp(logit - maxLogit) / sumExp).toList();
+  }
 
-    int maxIndex = outputData.indexWhere((element) => element == outputData.reduce((a, b) => a > b ? a : b));
+  void _handleModelOutput(List<double> outputData) {
+    List<double> averagedOutput = List.filled(outputData.length, 0.0);
+    for (var prediction in _recentPredictions) {
+      for (int i = 0; i < prediction.length; i++) {
+        averagedOutput[i] += prediction[i];
+      }
+    }
+    averagedOutput = averagedOutput.map((e) => e / _recentPredictions.length).toList();
+
+    int maxIndex = averagedOutput.indexWhere((element) => element == averagedOutput.reduce((a, b) => a > b ? a : b));
 
     setState(() {
       if (maxIndex == 0) {
@@ -163,10 +180,11 @@ class _AlarmState extends State<Alarm> {
   void _getTime() {
     final DateTime now = DateTime.now();
     final String formattedTime = _formatTime(now);
-    if (mounted)
+    if (mounted) {
       setState(() {
         _timeString = formattedTime;
       });
+    }
   }
 
   String _formatTime(DateTime dateTime) {
@@ -209,8 +227,7 @@ class _AlarmState extends State<Alarm> {
                     fontWeight: FontWeight.w900),
               ),
               Container(
-                  height: ratio.height * 100,
-                  child: SoundWaveformWidget())
+                  height: ratio.height * 100, child: SoundWaveformWidget())
             ],
           ),
         ),
