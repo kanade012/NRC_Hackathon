@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:delight/Config/bluetooth_provider.dart';
 import '../Config/color.dart';
 import '../main.dart';
@@ -21,13 +22,69 @@ class _MainPageState extends State<MainPage> {
   double brightness = 1;
   int transitionTime = 3;
   double textSize = 14;
-
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   late Future<void> _loadSettingsFuture;
 
   @override
   void initState() {
     super.initState();
     _loadSettingsFuture = _loadSettings();
+    initializeNotifications();
+  }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+    ));
+  }
+
+  void initializeNotifications() async {
+    // Android 13 이상에서는 알림 권한이 필요합니다.
+    await requestNotificationPermission();
+
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+    var initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+
+    flutterLocalNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        String? payload = response.payload;
+        print('알림 선택됨: $payload');
+        // 알림 클릭 시 원하는 작업을 여기에 추가
+      },
+    );
+  }
+
+  Future<void> _showNotification(String message) async {
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'bluetooth_channel_id',
+      'Bluetooth Notifications',
+      channelDescription: 'Notifications for data received via Bluetooth',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Received Data',
+      message,
+      platformChannelSpecifics,
+      payload: 'Bluetooth Data',
+    );
+  }
+
+  Future<void> requestNotificationPermission() async {
+    if (await Permission.notification.request().isGranted) {
+      showMessage('알림 권한이 허용되었습니다.');
+    } else {
+      showMessage('알림 권한이 거부되었습니다.');
+    }
   }
 
   Future<void> _loadSettings() async {
@@ -121,6 +178,11 @@ class _MainPageState extends State<MainPage> {
   Widget _buildSettingsUI(BuildContext context) {
     final bluetoothManager = Provider.of<BluetoothManager>(context);
 
+    // 블루투스에서 데이터를 수신할 때마다 알림을 보내도록 설정
+    bluetoothManager.onDataReceived = (data) {
+      _showNotification(data);
+    };
+
     return Padding(
       padding: EdgeInsets.all(ratio.width * 15),
       child: SingleChildScrollView(
@@ -193,7 +255,6 @@ class _MainPageState extends State<MainPage> {
                                 ),
                               ),
                             );
-
                           },
                           child: Padding(
                             padding: EdgeInsets.only(top: ratio.height * 7),
@@ -252,7 +313,6 @@ class _MainPageState extends State<MainPage> {
     );
   }
 }
-
 
 class CustomSliderCard extends StatefulWidget {
   final String title;
@@ -570,7 +630,6 @@ class _BluetoothDeviceListScreenState extends State<BluetoothDeviceListScreen> {
   Future<bool> _requestPermissions() async {
     final status = await [
       Permission.location,
-      Permission.bluetooth,
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
     ].request();

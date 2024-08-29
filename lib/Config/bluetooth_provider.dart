@@ -1,15 +1,43 @@
 import 'dart:async';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class BluetoothManager with ChangeNotifier {
   final FlutterReactiveBle _ble = FlutterReactiveBle();
   StreamSubscription<ConnectionStateUpdate>? _connectionSubscription;
+  StreamSubscription<List<int>>? _dataSubscription;
   DiscoveredDevice? connectedDevice;
   bool isConnected = false;
 
   QualifiedCharacteristic? _characteristic;
+  QualifiedCharacteristic? get connectedCharacteristic => _characteristic;
 
+  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+
+  BluetoothManager() {
+    _initializeNotifications();
+  }
+
+  // Initialize local notifications
+  void _initializeNotifications() {
+    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+    );
+
+    flutterLocalNotificationsPlugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        String? payload = response.payload;
+        print('Notification selected: $payload');
+      },
+    );
+  }
+
+  // Connect to a Bluetooth device
   Future<bool> connectToDevice(DiscoveredDevice device) async {
     try {
       _connectionSubscription?.cancel();
@@ -18,13 +46,10 @@ class BluetoothManager with ChangeNotifier {
           if (connectionState.connectionState == DeviceConnectionState.connected) {
             connectedDevice = device;
             isConnected = true;
-            _discoverServices(device); // 서비스 탐색 및 특성 설정
+            _discoverServices(device); // Discover services and characteristics
             notifyListeners();
           } else if (connectionState.connectionState == DeviceConnectionState.disconnected) {
-            connectedDevice = null;
-            isConnected = false;
-            _characteristic = null;
-            notifyListeners();
+            _handleDisconnection();
           }
         },
         onError: (error) {
@@ -32,8 +57,7 @@ class BluetoothManager with ChangeNotifier {
         },
       );
 
-      // 연결 상태를 확인하기 위해 일정 시간 대기
-      await Future.delayed(Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 3)); // Wait to confirm connection
       return isConnected;
     } catch (e) {
       _handleError(e);
@@ -41,6 +65,7 @@ class BluetoothManager with ChangeNotifier {
     }
   }
 
+  // Discover services and characteristics
   Future<void> _discoverServices(DiscoveredDevice device) async {
     try {
       final services = await _ble.discoverServices(device.id);
@@ -50,15 +75,17 @@ class BluetoothManager with ChangeNotifier {
         for (var characteristic in service.characteristics) {
           print("Characteristic: ${characteristic.characteristicId}");
 
-          // 특성에 쓰기 권한이 있는지 확인
           if (characteristic.isWritableWithResponse || characteristic.isWritableWithoutResponse) {
             _characteristic = QualifiedCharacteristic(
               serviceId: service.serviceId,
               characteristicId: characteristic.characteristicId,
               deviceId: device.id,
             );
-            print("Writable characteristic found and set: ${characteristic.characteristicId}");
-            return; // 특성을 찾으면 더 이상 탐색하지 않음
+            print("Writable characteristic found: ${characteristic.characteristicId}");
+
+            // Start listening to the device for data
+            _startListeningToDevice();
+            return;
           }
         }
       }
@@ -69,8 +96,52 @@ class BluetoothManager with ChangeNotifier {
     }
   }
 
-  QualifiedCharacteristic? get connectedCharacteristic => _characteristic;
+  Function(String)? onDataReceived;
 
+  // Start listening to the device for data
+  void _startListeningToDevice() {
+    if (_characteristic != null) {
+      _dataSubscription?.cancel();
+      _dataSubscription = _ble.subscribeToCharacteristic(_characteristic!).listen((data) {
+        String receivedData = String.fromCharCodes(data);
+        print("Data received: $receivedData");
+
+        if (onDataReceived != null) {
+          onDataReceived!(receivedData);
+        }
+
+        _showNotification(receivedData);
+      }, onError: (error) {
+        print("Data subscription error: $error");
+      });
+    } else {
+      print("No characteristic set for listening.");
+    }
+  }
+
+
+  // Show a local notification
+  Future<void> _showNotification(String message) async {
+    const androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'bluetooth_channel_id',
+      'Bluetooth Notifications',
+      channelDescription: 'Notifications for data received via Bluetooth',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Received Data',
+      message,
+      platformChannelSpecifics,
+      payload: 'Bluetooth Data',
+    );
+  }
+
+  // Write data to the connected device
   Future<void> writeData(String data) async {
     if (_characteristic != null) {
       try {
@@ -87,13 +158,12 @@ class BluetoothManager with ChangeNotifier {
     }
   }
 
+  // Disconnect from the device
   Future<bool> disconnectDevice() async {
     try {
-      _connectionSubscription?.cancel();
-      connectedDevice = null;
-      isConnected = false;
-      _characteristic = null;
-      notifyListeners();
+      await _connectionSubscription?.cancel();
+      await _dataSubscription?.cancel();
+      _handleDisconnection();
       return true;
     } catch (e) {
       print('Disconnection error: $e');
@@ -101,6 +171,15 @@ class BluetoothManager with ChangeNotifier {
     }
   }
 
+  // Handle disconnection logic
+  void _handleDisconnection() {
+    connectedDevice = null;
+    isConnected = false;
+    _characteristic = null;
+    notifyListeners();
+  }
+
+  // Handle connection errors
   void _handleError(Object error) {
     print('Connection error: $error');
     disconnectDevice();
@@ -109,6 +188,7 @@ class BluetoothManager with ChangeNotifier {
   @override
   void dispose() {
     _connectionSubscription?.cancel();
+    _dataSubscription?.cancel();
     super.dispose();
   }
 }
