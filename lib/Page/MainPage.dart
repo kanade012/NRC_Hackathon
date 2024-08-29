@@ -20,7 +20,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   double vibration = 1;
   double brightness = 1;
-  int transitionTime = 3;
+  int getAlarm = 0;
   double textSize = 14;
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   late Future<void> _loadSettingsFuture;
@@ -92,7 +92,7 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       vibration = prefs.getDouble('vibration') ?? 1.0;
       brightness = prefs.getDouble('brightness') ?? 1.0;
-      transitionTime = prefs.getInt('transitionTime') ?? 3;
+      getAlarm = prefs.getInt('getAlarm') ?? 0;
       textSize = prefs.getDouble('textSize') ?? 14.0;
     });
   }
@@ -115,7 +115,7 @@ class _MainPageState extends State<MainPage> {
     await _loadSettings();
     await _sendDataToArduino("vibration:$vibration");
     await _sendDataToArduino("brightness:$brightness");
-    await _sendDataToArduino("transitionTime:$transitionTime");
+    await _sendDataToArduino("getAlarm:$getAlarm");
     await _sendDataToArduino("textSize:$textSize");
     print("All settings uploaded");
   }
@@ -138,12 +138,12 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  void _updateTransitionTime(int value) async {
+  void _updategetAlarm(int value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('transitionTime', value);
-    await _sendDataToArduino("transitionTime:$value");
+    await prefs.setInt('getAlarm', value);
+    await _sendDataToArduino("getAlarm:$value");
     setState(() {
-      transitionTime = value;
+      getAlarm = value;
     });
   }
 
@@ -301,8 +301,8 @@ class _MainPageState extends State<MainPage> {
                   children: [
                     CustomSliderCard(title: "진동", value: vibration, onChanged: _updateVibration),
                     CustomSlider2Card(title: "밝기", value: brightness, onChanged: _updateBrightness),
-                    CustomUpDownCard(title: "전환 시간", value: transitionTime, onChanged: _updateTransitionTime),
                     CustomUpDown2Card(title: "텍스트 크기", value: textSize, onChanged: _updateTextSize),
+                    CustomUpDownCard(title: "알람 수신", value: getAlarm, onChanged: _updategetAlarm),
                   ],
                 ),
               ),
@@ -434,14 +434,21 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
   @override
   void initState() {
     super.initState();
-    _currentValue = widget.value;
+    _currentValue = widget.value; // 초기값 설정
+  }
+
+  void _toggleValue() {
+    setState(() {
+      _currentValue = _currentValue == 0 ? 1 : 0; // 값 토글
+    });
+    widget.onChanged(_currentValue); // 외부 콜백 호출
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(ratio.width * 10),
-      padding: EdgeInsets.all(ratio.width * 10),
+      margin: EdgeInsets.all(10),
+      padding: EdgeInsets.all(10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: Colors.white,
@@ -458,14 +465,7 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               GestureDetector(
-                onTap: () {
-                  if (_currentValue > 0) {
-                    setState(() {
-                      _currentValue--;
-                    });
-                    widget.onChanged(_currentValue);
-                  }
-                },
+                onTap: _toggleValue,
                 child: Container(
                   decoration: BoxDecoration(
                       border: Border.all(width: 3, color: DelightColors.mainBlue)),
@@ -476,18 +476,15 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                   ),
                 ),
               ),
-              Text('$_currentValue',
-                  style: TextStyle(
-                    fontSize: 40,
-                    color: DelightColors.mainBlue,
-                  )),
+              Text(
+                _currentValue == 1 ? '켬' : '끔',
+                style: TextStyle(
+                  fontSize: 40,
+                  color: DelightColors.mainBlue,
+                ),
+              ),
               GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _currentValue++;
-                  });
-                  widget.onChanged(_currentValue);
-                },
+                onTap: _toggleValue,
                 child: Container(
                     decoration: BoxDecoration(
                         border: Border.all(width: 3, color: DelightColors.mainBlue)),
@@ -504,6 +501,7 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
     );
   }
 }
+
 
 class CustomUpDown2Card extends StatefulWidget {
   final String title;
