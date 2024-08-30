@@ -44,7 +44,7 @@ class _MainPageState extends State<MainPage> {
 
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-    var initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/logo');
     var initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
     );
@@ -192,7 +192,7 @@ class _MainPageState extends State<MainPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Text("Delight",
+                Text("Haptic Hear",
                     style: TextStyle(
                         color: DelightColors.darkgrey,
                         fontSize: 25,
