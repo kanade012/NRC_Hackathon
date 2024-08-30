@@ -62,7 +62,7 @@ class _MainPageState extends State<MainPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Delight",
+                  "Haptic Hear",
                   style: TextStyle(
                       color: DelightColors.darkgrey,
                       fontSize: settingsProvider.textSize, // 폰트 사이즈 Wear OS에 맞게 조정
