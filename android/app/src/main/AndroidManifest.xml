@@ -5,9 +5,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:label="delight"
+        android:label="Haptic Hear"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/logo"
         android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
