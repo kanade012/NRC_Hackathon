@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,7 +31,6 @@ class _AlarmState extends State<Alarm> {
   bool _isRecording = false;
   Timer? _timer;
   StreamController<Food> _streamController = StreamController<Food>();
-  final List<List<double>> _recentPredictions = [];
 
   @override
   void initState() {
@@ -40,14 +38,14 @@ class _AlarmState extends State<Alarm> {
     _loadPreferences();
     _initializeInterpreter();
     _timeString = _formatTime(DateTime.now());
-    Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
+    Timer.periodic(Duration(seconds: 2), (Timer t) => _getTime());
   }
 
   Future<void> _initializeInterpreter() async {
     try {
-      _interpreter = await Interpreter.fromAsset('soundAnalyzer.tflite');
+      _interpreter = await Interpreter.fromAsset('model.tflite');
       _inputBuffer = TensorBuffer.createFixedSize([1, 1640], TfLiteType.float32);
-      _outputBuffer = TensorBuffer.createFixedSize([1, 3], TfLiteType.float32);
+      _outputBuffer = TensorBuffer.createFixedSize([1, 6], TfLiteType.float32); // Updated to match model output shape
       _startContinuousRecording();
     } catch (e) {
       print("Error initializing interpreter: $e");
@@ -71,7 +69,7 @@ class _AlarmState extends State<Alarm> {
       }
     });
 
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(Duration(seconds: 2), (timer) {
       if (_pcmDataBuffer.isNotEmpty) {
         _processAudioData(Uint8List.fromList(_pcmDataBuffer));
         _pcmDataBuffer.clear();
@@ -86,23 +84,16 @@ class _AlarmState extends State<Alarm> {
   void _processAudioData(Uint8List pcmData) {
     Float32List floatBuffer = _convertToFloat32(pcmData);
 
-    if (floatBuffer.length < 1640) {
-      floatBuffer = Float32List.fromList(
-          floatBuffer.toList() + List.filled(1640 - floatBuffer.length, 0.0));
-    } else if (floatBuffer.length > 1640) {
-      floatBuffer = floatBuffer.sublist(0, 1640);
+    // 윈도우 크기와 shape을 정확히 맞춤
+    if (floatBuffer.length != 1640) {
+      floatBuffer = _adjustToInputShape(floatBuffer, 1640);
     }
 
     _inputBuffer.loadList(floatBuffer, shape: [1, 1640]);
     _interpreter.run(_inputBuffer.buffer, _outputBuffer.buffer);
 
     List<double> outputData = _outputBuffer.getDoubleList();
-    print("Model output: $outputData");  // 모델 출력 결과를 콘솔에 출력
-
-    outputData = _applySoftmax(outputData);
-
-    _recentPredictions.add(outputData);
-    if (_recentPredictions.length > 5) _recentPredictions.removeAt(0);
+    print("Model output: $outputData");
 
     _handleModelOutput(outputData);
   }
@@ -115,29 +106,29 @@ class _AlarmState extends State<Alarm> {
     return buffer;
   }
 
-  List<double> _applySoftmax(List<double> logits) {
-    double maxLogit = logits.reduce((a, b) => a > b ? a : b);
-    double sumExp = logits.fold(0.0, (sum, logit) => sum + exp(logit - maxLogit));
-    return logits.map((logit) => exp(logit - maxLogit) / sumExp).toList();
+  Float32List _adjustToInputShape(Float32List data, int targetSize) {
+    if (data.length < targetSize) {
+      return Float32List.fromList(data.toList() + List.filled(targetSize - data.length, 0.0));
+    } else {
+      return Float32List.fromList(data.sublist(0, targetSize));
+    }
   }
 
   void _handleModelOutput(List<double> outputData) {
-    List<double> averagedOutput = List.filled(outputData.length, 0.0);
-    for (var prediction in _recentPredictions) {
-      for (int i = 0; i < prediction.length; i++) {
-        averagedOutput[i] += prediction[i];
-      }
-    }
-    averagedOutput = averagedOutput.map((e) => e / _recentPredictions.length).toList();
-
-    int maxIndex = averagedOutput.indexWhere((element) => element == averagedOutput.reduce((a, b) => a > b ? a : b));
+    int maxIndex = outputData.indexOf(outputData.reduce((a, b) => a > b ? a : b));
 
     setState(() {
       if (maxIndex == 0) {
-        _detectionResult = "Hoot";
+        _detectionResult = "Fire";
       } else if (maxIndex == 1) {
-        _detectionResult = "Noise";
+        _detectionResult = "Horn";
       } else if (maxIndex == 2) {
+        _detectionResult = "Noise";
+      } else if (maxIndex == 3) {
+        _detectionResult = "Knock";
+      } else if (maxIndex == 4) {
+        _detectionResult = "Noise";
+      } else if (maxIndex == 5) {
         _detectionResult = "Siren";
       }
     });
