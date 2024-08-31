@@ -44,12 +44,47 @@ class _AlarmState extends State<Alarm> {
   Future<void> _initializeInterpreter() async {
     try {
       _interpreter = await Interpreter.fromAsset('model.tflite');
-      _inputBuffer = TensorBuffer.createFixedSize([1, 1640], TfLiteType.float32);
-      _outputBuffer = TensorBuffer.createFixedSize([1, 6], TfLiteType.float32); // Updated to match model output shape
+      _inputBuffer = TensorBuffer.createFixedSize([1, 15600], TfLiteType.float32);
+      _outputBuffer = TensorBuffer.createFixedSize([1, 521], TfLiteType.float32); // YAMNet의 출력 크기
       _startContinuousRecording();
     } catch (e) {
       print("Error initializing interpreter: $e");
     }
+  }
+
+  void _processAudioData(Uint8List pcmData) {
+    Float32List floatBuffer = _convertToFloat32(pcmData);
+
+    // YAMNet의 입력 크기인 15600으로 조정
+    if (floatBuffer.length != 15600) {
+      floatBuffer = _adjustToInputShape(floatBuffer, 15600);
+    }
+
+    _inputBuffer.loadList(floatBuffer, shape: [1, 15600]);
+    _interpreter.run(_inputBuffer.buffer, _outputBuffer.buffer);
+
+    List<double> outputData = _outputBuffer.getDoubleList();
+    print("Model output: $outputData");
+
+    _handleModelOutput(outputData);
+  }
+
+  void _handleModelOutput(List<double> outputData) {
+    int maxIndex = outputData.indexOf(outputData.reduce((a, b) => a > b ? a : b));
+
+    setState(() {
+      if (maxIndex == 302 || maxIndex == 303) {
+        _detectionResult = "Horn";
+      } else if (maxIndex >= 316 && maxIndex <= 319 || maxIndex == 390) {
+        _detectionResult = "Siren";
+      } else if (maxIndex == 393 || maxIndex == 394) {
+        _detectionResult = "Fire Alarm";
+      } else if (maxIndex == 353) {
+        _detectionResult = "Knock";
+      } else {
+        _detectionResult = "Noise";
+      }
+    });
   }
 
   void _startContinuousRecording() async {
@@ -81,22 +116,6 @@ class _AlarmState extends State<Alarm> {
     _pcmDataBuffer.addAll(foodData.data!);
   }
 
-  void _processAudioData(Uint8List pcmData) {
-    Float32List floatBuffer = _convertToFloat32(pcmData);
-
-    // 윈도우 크기와 shape을 정확히 맞춤
-    if (floatBuffer.length != 1640) {
-      floatBuffer = _adjustToInputShape(floatBuffer, 1640);
-    }
-
-    _inputBuffer.loadList(floatBuffer, shape: [1, 1640]);
-    _interpreter.run(_inputBuffer.buffer, _outputBuffer.buffer);
-
-    List<double> outputData = _outputBuffer.getDoubleList();
-    print("Model output: $outputData");
-
-    _handleModelOutput(outputData);
-  }
 
   Float32List _convertToFloat32(Uint8List pcmData) {
     var buffer = Float32List(pcmData.length ~/ 2);
@@ -114,25 +133,6 @@ class _AlarmState extends State<Alarm> {
     }
   }
 
-  void _handleModelOutput(List<double> outputData) {
-    int maxIndex = outputData.indexOf(outputData.reduce((a, b) => a > b ? a : b));
-
-    setState(() {
-      if (maxIndex == 0) {
-        _detectionResult = "Fire";
-      } else if (maxIndex == 1) {
-        _detectionResult = "Horn";
-      } else if (maxIndex == 2) {
-        _detectionResult = "Noise";
-      } else if (maxIndex == 3) {
-        _detectionResult = "Knock";
-      } else if (maxIndex == 4) {
-        _detectionResult = "Noise";
-      } else if (maxIndex == 5) {
-        _detectionResult = "Siren";
-      }
-    });
-  }
 
   @override
   void dispose() {
