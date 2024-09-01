@@ -8,6 +8,7 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
+import 'package:vibration/vibration.dart';
 import '../Config/Setting_Provider.dart';
 import '../Config/color.dart';
 import '../main.dart';
@@ -45,7 +46,7 @@ class _AlarmState extends State<Alarm> {
     try {
       _interpreter = await Interpreter.fromAsset('model.tflite');
       _inputBuffer = TensorBuffer.createFixedSize([1, 15600], TfLiteType.float32);
-      _outputBuffer = TensorBuffer.createFixedSize([1, 521], TfLiteType.float32); // YAMNet의 출력 크기
+      _outputBuffer = TensorBuffer.createFixedSize([1, 521], TfLiteType.float32);
       _startContinuousRecording();
     } catch (e) {
       print("Error initializing interpreter: $e");
@@ -69,23 +70,116 @@ class _AlarmState extends State<Alarm> {
     _handleModelOutput(outputData);
   }
 
-  void _handleModelOutput(List<double> outputData) {
-    int maxIndex = outputData.indexOf(outputData.reduce((a, b) => a > b ? a : b));
+  bool _isVibrating = false;
 
-    setState(() {
+  void _handleModelOutput(List<double> outputData) async {
+    if (_isVibrating) return;
+
+    int maxIndex = outputData.indexOf(outputData.reduce((a, b) => a > b ? a : b));
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    // 결과에 따라 진동 패턴을 설정합니다.
+    if (settingsProvider.Mode == 0) {
       if (maxIndex == 302 || maxIndex == 303) {
-        _detectionResult = "Horn";
+        setState(() {
+          _detectionResult = "Horn";
+        });
+        await _triggerVibration2(settingsProvider.vibrationIntensity);
+      } else if (maxIndex == 0 || maxIndex == 2) {
+        setState(() {
+          _detectionResult = "Speech";
+        });
+        await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex >= 316 && maxIndex <= 319 || maxIndex == 390) {
-        _detectionResult = "Siren";
+        setState(() {
+          _detectionResult = "Siren";
+        });
+        await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex == 393 || maxIndex == 394) {
-        _detectionResult = "Fire Alarm";
-      } else if (maxIndex == 353) {
-        _detectionResult = "Knock";
+        setState(() {
+          _detectionResult = "Fire Alarm";
+        });
+        await _triggerVibration2(settingsProvider.vibrationIntensity);
+      } else if (maxIndex == 383) {
+        setState(() {
+          _detectionResult = "Smart Phone";
+        });
+        await _triggerVibration(settingsProvider.vibrationIntensity);
+      } else if (maxIndex == 382) {
+        setState(() {
+          _detectionResult = "Alarm";
+        });
+        await _triggerVibration(settingsProvider.vibrationIntensity);
       } else {
-        _detectionResult = "Noise";
+        setState(() {
+          _detectionResult = "Noise";
+        });
       }
-    });
+    } else if (settingsProvider.Mode == 1) {
+      if (maxIndex == 302 || maxIndex == 303) {
+        setState(() {
+          _detectionResult = "Horn";
+        });
+        await _triggerVibration2(settingsProvider.vibrationIntensity);
+      } else if (maxIndex >= 316 && maxIndex <= 319 || maxIndex == 390) {
+        setState(() {
+          _detectionResult = "Siren";
+        });
+        await _triggerVibration2(settingsProvider.vibrationIntensity);
+      } else {
+        setState(() {
+          _detectionResult = "Noise";
+        });
+      }
+    } else if (settingsProvider.Mode == 2) {
+      if (maxIndex == 393 || maxIndex == 394) {
+        setState(() {
+          _detectionResult = "Fire Alarm";
+        });
+        await _triggerVibration2(settingsProvider.vibrationIntensity);
+      } else if (maxIndex == 383) {
+        setState(() {
+          _detectionResult = "Smart Phone";
+        });
+        await _triggerVibration(settingsProvider.vibrationIntensity);
+      } else if (maxIndex == 382) {
+        setState(() {
+          _detectionResult = "Alarm";
+        });
+        await _triggerVibration(settingsProvider.vibrationIntensity);
+      } else {
+        setState(() {
+          _detectionResult = "Noise";
+        });
+      }
+    }
   }
+
+  Future<void> _triggerVibration(double intensity) async {
+    _isVibrating = true; // 진동 시작
+    if (await Vibration.hasVibrator() ?? false) {
+      await Vibration.vibrate(duration: (intensity * 100).toInt());
+      await Future.delayed(Duration(milliseconds: 100));
+      await Vibration.vibrate(duration: (intensity * 100).toInt());
+      await Future.delayed(Duration(milliseconds: 100));
+      await Vibration.vibrate(duration: (intensity * 100).toInt());
+    }
+    _isVibrating = false; // 진동 종료
+  }
+
+  Future<void> _triggerVibration2(double intensity) async {
+    _isVibrating = true; // 진동 시작
+    if (await Vibration.hasVibrator() ?? false) {
+      await Vibration.vibrate(duration: (intensity * 200).toInt());
+      await Future.delayed(Duration(milliseconds: 200));
+      await Vibration.vibrate(duration: (intensity * 200).toInt());
+      await Future.delayed(Duration(milliseconds: 200));
+      await Vibration.vibrate(duration: (intensity * 200).toInt());
+    }
+    _isVibrating = false; // 진동 종료
+  }
+
+
 
   void _startContinuousRecording() async {
     await Permission.microphone.request();
@@ -154,7 +248,7 @@ class _AlarmState extends State<Alarm> {
           prefs.getDouble('vibrationIntensity') ?? 1.0;
       settingsProvider.brightness = prefs.getDouble('brightness') ?? 1.0;
       settingsProvider.textSize = prefs.getDouble('textSize') ?? 26.0;
-      settingsProvider.transitionTime = prefs.getInt('transitionTime') ?? 1;
+      settingsProvider.Mode = prefs.getInt('Mode') ?? 0;
     });
     _updateBrightness(settingsProvider.brightness);
   }

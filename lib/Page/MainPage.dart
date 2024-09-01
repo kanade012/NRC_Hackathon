@@ -32,7 +32,7 @@ class _MainPageState extends State<MainPage> {
           prefs.getDouble('vibrationIntensity') ?? 1.0;
       settingsProvider.brightness = prefs.getDouble('brightness') ?? 1.0;
       settingsProvider.textSize = prefs.getDouble('textSize') ?? 26.0;
-      settingsProvider.transitionTime = prefs.getInt('transitionTime') ?? 1;
+      settingsProvider.Mode = prefs.getInt('Mode') ?? 0;
     });
 
     // 화면 밝기를 설정합니다.

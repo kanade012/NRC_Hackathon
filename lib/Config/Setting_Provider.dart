@@ -5,7 +5,7 @@ class SettingsProvider with ChangeNotifier {
   double _vibrationIntensity = 1.0;
   double _brightness = 1.0;
   double _textSize = 26.0;
-  int _transitionTime = 1;
+  int _Mode = 0;
 
   double get vibrationIntensity => _vibrationIntensity;
   set vibrationIntensity(double value) {
@@ -25,9 +25,9 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  int get transitionTime => _transitionTime;
-  set transitionTime(int value) {
-    _transitionTime = value;
+  int get Mode => _Mode;
+  set Mode(int value) {
+    _Mode = value;
     notifyListeners();
   }
 
@@ -37,7 +37,7 @@ class SettingsProvider with ChangeNotifier {
     vibrationIntensity = prefs.getDouble('vibrationIntensity') ?? 1.0;
     brightness = prefs.getDouble('brightness') ?? 1.0;
     textSize = prefs.getDouble('textSize') ?? 26.0;
-    transitionTime = prefs.getInt('transitionTime') ?? 1;
+    Mode = prefs.getInt('Mode') ?? 1;
   }
 
   // SharedPreferences에 값을 저장하는 함수

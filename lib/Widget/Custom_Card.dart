@@ -24,6 +24,7 @@ class CustomSliderCard extends StatefulWidget {
 
 class _CustomSliderCardState extends State<CustomSliderCard> {
   late double _currentValue;
+  String Mode = "Normal";
 
   @override
   void initState() {
@@ -70,12 +71,12 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
 class CustomUpDownCard extends StatefulWidget {
   final String title;
   final int value;
-  final ValueChanged<int> onChanged; // 콜백 추가
+  final ValueChanged<int> onChanged;
 
   CustomUpDownCard({
     required this.title,
     required this.value,
-    required this.onChanged, // 콜백 초기화
+    required this.onChanged,
     super.key,
   });
 
@@ -89,13 +90,26 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
   @override
   void initState() {
     super.initState();
-    _currentValue = widget.value; // 초기값 설정
+    _currentValue = widget.value;
+  }
+
+  // A method to map _currentValue to the corresponding text
+  String getModeText(int value) {
+    switch (value) {
+      case 0:
+        return 'Normal';
+      case 1:
+        return 'Drive';
+      case 2:
+        return 'Sleep';
+      default:
+        return 'Unknown';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider =
-    Provider.of<SettingsProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     return Container(
       margin: EdgeInsets.all(ratio.width * 10),
       padding: EdgeInsets.all(ratio.width * 10),
@@ -117,9 +131,9 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
               GestureDetector(
                 onTap: () {
                   setState(() {
-                    _currentValue -= 1;
+                    if (_currentValue > 0) _currentValue -= 1;
                   });
-                  widget.onChanged(_currentValue); // 부모 위젯에 값 전달
+                  widget.onChanged(_currentValue);
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -132,17 +146,18 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                   ),
                 ),
               ),
-              Text('$_currentValue', // 업데이트된 값을 표시
+              // Display text based on _currentValue
+              Text(getModeText(_currentValue),
                   style: TextStyle(
-                    fontSize: 40, // 디자인에 맞게 폰트 크기 조정
+                    fontSize: 40,
                     color: DelightColors.mainBlue,
                   )),
               GestureDetector(
                 onTap: () {
                   setState(() {
-                    _currentValue += 1;
+                    if (_currentValue < 2) _currentValue += 1;
                   });
-                  widget.onChanged(_currentValue); // 부모 위젯에 값 전달
+                  widget.onChanged(_currentValue);
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -162,6 +177,7 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
     );
   }
 }
+
 
 class CustomUpDown2Card extends StatefulWidget {
   final String title;

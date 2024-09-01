@@ -32,7 +32,7 @@ class _SettingState extends State<Setting> {
           prefs.getDouble('vibrationIntensity') ?? 1.0;
       settingsProvider.brightness = prefs.getDouble('brightness') ?? 1.0;
       settingsProvider.textSize = prefs.getDouble('textSize') ?? 26.0;
-      settingsProvider.transitionTime = prefs.getInt('transitionTime') ?? 1;
+      settingsProvider.Mode = prefs.getInt('Mode') ?? 0;
     });
 
     // 화면 밝기를 설정합니다.
@@ -89,6 +89,24 @@ class _SettingState extends State<Setting> {
           body: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              CustomUpDownCard(
+                title: "모드 전환",
+                value: settingsProvider.Mode,
+                onChanged: (value) {
+                  setState(() {
+                    settingsProvider.Mode = value;
+                    _updatePreferences('Mode', value);
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        Scaffold(
+          backgroundColor: Colors.white,
+          body: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
               CustomSliderCard(
                 title: "진동세기",
                 value: settingsProvider.vibrationIntensity,
@@ -115,24 +133,6 @@ class _SettingState extends State<Setting> {
                     settingsProvider.brightness = value;
                     _updatePreferences('brightness', value);
                     _updateBrightness(value); // 밝기 업데이트
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-        Scaffold(
-          backgroundColor: Colors.white,
-          body: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CustomUpDownCard(
-                title: "전환 시간",
-                value: settingsProvider.transitionTime,
-                onChanged: (value) {
-                  setState(() {
-                    settingsProvider.transitionTime = value;
-                    _updatePreferences('transitionTime', value);
                   });
                 },
               ),
