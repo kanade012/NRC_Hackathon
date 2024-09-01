@@ -23,7 +23,7 @@ class Alarm extends StatefulWidget {
 
 class _AlarmState extends State<Alarm> {
   late String _timeString;
-  String _detectionResult = "Noise";
+  String _detectionResult = "잡음";
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
   late Interpreter _interpreter;
   late TensorBuffer _inputBuffer;
@@ -82,74 +82,74 @@ class _AlarmState extends State<Alarm> {
     if (settingsProvider.Mode == 0) {
       if (maxIndex == 302 || maxIndex == 303) {
         setState(() {
-          _detectionResult = "Horn";
+          _detectionResult = "경적";
         });
         await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex == 0 || maxIndex == 2) {
         setState(() {
-          _detectionResult = "Speech";
+          _detectionResult = "대화";
         });
         await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex >= 316 && maxIndex <= 319 || maxIndex == 390) {
         setState(() {
-          _detectionResult = "Siren";
+          _detectionResult = "사이렌";
         });
         await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex == 393 || maxIndex == 394) {
         setState(() {
-          _detectionResult = "Fire Alarm";
+          _detectionResult = "화재경보";
         });
         await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex == 383) {
         setState(() {
-          _detectionResult = "Smart Phone";
+          _detectionResult = "핸드폰 소리";
         });
         await _triggerVibration(settingsProvider.vibrationIntensity);
       } else if (maxIndex == 382) {
         setState(() {
-          _detectionResult = "Alarm";
+          _detectionResult = "알람 소리";
         });
         await _triggerVibration(settingsProvider.vibrationIntensity);
       } else {
         setState(() {
-          _detectionResult = "Noise";
+          _detectionResult = "잡음";
         });
       }
     } else if (settingsProvider.Mode == 1) {
       if (maxIndex == 302 || maxIndex == 303) {
         setState(() {
-          _detectionResult = "Horn";
+          _detectionResult = "경적";
         });
         await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex >= 316 && maxIndex <= 319 || maxIndex == 390) {
         setState(() {
-          _detectionResult = "Siren";
+          _detectionResult = "사이렌";
         });
         await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else {
         setState(() {
-          _detectionResult = "Noise";
+          _detectionResult = "잡음";
         });
       }
     } else if (settingsProvider.Mode == 2) {
       if (maxIndex == 393 || maxIndex == 394) {
         setState(() {
-          _detectionResult = "Fire Alarm";
+          _detectionResult = "화재경보";
         });
         await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex == 383) {
         setState(() {
-          _detectionResult = "Smart Phone";
+          _detectionResult = "핸드폰 소리";
         });
         await _triggerVibration(settingsProvider.vibrationIntensity);
       } else if (maxIndex == 382) {
         setState(() {
-          _detectionResult = "Alarm";
+          _detectionResult = "알람 소리";
         });
         await _triggerVibration(settingsProvider.vibrationIntensity);
       } else {
         setState(() {
-          _detectionResult = "Noise";
+          _detectionResult = "잡음";
         });
       }
     }

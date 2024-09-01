@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:delight/Config/Setting_Provider.dart';
 import '../main.dart';
-import 'Custom_Slider.dart';
+
 
 class CustomSliderCard extends StatefulWidget {
   final String title;
@@ -24,7 +24,6 @@ class CustomSliderCard extends StatefulWidget {
 
 class _CustomSliderCardState extends State<CustomSliderCard> {
   late double _currentValue;
-  String Mode = "Normal";
 
   @override
   void initState() {
@@ -34,8 +33,6 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider =
-    Provider.of<SettingsProvider>(context, listen: false);
     return Container(
       margin: EdgeInsets.all(10),
       padding: EdgeInsets.all(10),
@@ -49,7 +46,7 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
         children: [
           Text(widget.title,
               style: TextStyle(
-                  fontSize: settingsProvider.textSize,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                   color: DelightColors.mainBlue)),
           SliderPage(
@@ -64,6 +61,35 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
           Text("${_currentValue.toStringAsFixed(2)}"), // 소수점 두 자리로 표시
         ],
       ),
+    );
+  }
+}
+class SliderPage extends StatefulWidget {
+  double value1;
+  final ValueChanged<double> onChanged;
+
+  SliderPage({super.key, required this.value1, required this.onChanged});
+
+  @override
+  State<SliderPage> createState() => _SliderPageState();
+}
+
+class _SliderPageState extends State<SliderPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Slider(
+      activeColor: DelightColors.mainBlue,
+      inactiveColor: DelightColors.subBlue,
+      value: widget.value1,
+      max: 10,
+      label: widget.value1.round().toString(),
+      divisions: 10,
+      onChanged: (value) {
+        setState(() {
+          widget.value1 = value;
+        });
+        widget.onChanged(value);
+      },
     );
   }
 }
@@ -97,11 +123,11 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
   String getModeText(int value) {
     switch (value) {
       case 0:
-        return 'Normal';
+        return '일반';
       case 1:
-        return 'Drive';
+        return '운전';
       case 2:
-        return 'Sleep';
+        return '수면';
       default:
         return 'Unknown';
     }
@@ -135,15 +161,10 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                   });
                   widget.onChanged(_currentValue);
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue),
-                      borderRadius: BorderRadius.circular(100)),
-                  child: Icon(
-                    CupertinoIcons.minus,
-                    color: DelightColors.mainBlue,
-                    size: 40,
-                  ),
+                child: Icon(
+                  CupertinoIcons.arrowtriangle_left_fill,
+                  color: DelightColors.mainBlue,
+                  size: 40,
                 ),
               ),
               // Display text based on _currentValue
@@ -159,15 +180,10 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                   });
                   widget.onChanged(_currentValue);
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue),
-                      borderRadius: BorderRadius.circular(100)),
-                  child: Icon(
-                    CupertinoIcons.plus,
-                    color: DelightColors.mainBlue,
-                    size: 40,
-                  ),
+                child: Icon(
+                  CupertinoIcons.arrowtriangle_right_fill,
+                  color: DelightColors.mainBlue,
+                  size: 40,
                 ),
               )
             ],
@@ -233,15 +249,10 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                   });
                   widget.onChanged(_currentValue); // 부모 위젯에 값 전달
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue),
-                      borderRadius: BorderRadius.circular(100)),
-                  child: Icon(
-                    CupertinoIcons.minus,
-                    color: DelightColors.mainBlue,
-                    size: 40,
-                  ),
+                child: Icon(
+                  CupertinoIcons.arrowtriangle_left_fill,
+                  color: DelightColors.mainBlue,
+                  size: 40,
                 ),
               ),
               Text('가', // 업데이트된 값을 표시
@@ -256,15 +267,10 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                   });
                   widget.onChanged(_currentValue); // 부모 위젯에 값 전달
                 },
-                child: Container(
-                  decoration: BoxDecoration(
-                      border: Border.all(width: 3, color: DelightColors.mainBlue),
-                      borderRadius: BorderRadius.circular(100)),
-                  child: Icon(
-                    CupertinoIcons.plus,
-                    color: DelightColors.mainBlue,
-                    size: 40,
-                  ),
+                child: Icon(
+                  CupertinoIcons.arrowtriangle_right_fill,
+                  color: DelightColors.mainBlue,
+                  size: 40,
                 ),
               )
             ],
