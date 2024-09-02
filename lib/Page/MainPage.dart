@@ -243,16 +243,19 @@ class _MainPageState extends State<MainPage> {
           body: Column(
             children: [
               Padding(
-                padding: EdgeInsets.all(ratio.width * 10),
+                padding: EdgeInsets.only(top: ratio.height * 30),
                 child: Row(
                   children: [
-                    Text(
-                      "Haptic Hear",
-                      style: TextStyle(
-                          color: DelightColors.darkgrey,
-                          fontSize: 32, // 폰트 사이즈 Wear OS에 맞게 조정
-                          fontWeight: FontWeight.bold,
-                          fontStyle: FontStyle.italic),
+                    Padding(
+                      padding: EdgeInsets.only(left: ratio.width * 10),
+                      child: Text(
+                        "Haptic Hear",
+                        style: TextStyle(
+                            color: DelightColors.darkgrey,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            fontStyle: FontStyle.italic),
+                      ),
                     ),
                     Spacer()
                   ],
@@ -283,16 +286,20 @@ class _MainPageState extends State<MainPage> {
               ),
               Row(
                 children: [
-                  Text("설정 관리",
-                      style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: DelightColors.mainBlue)),
+                  Padding(
+                    padding: EdgeInsets.only(left: ratio.width * 10),
+                    child: Text("설정 관리",
+                        style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: DelightColors.mainBlue)),
+                  ),
                   Spacer()
                 ],
               ),
               Expanded(
                 child: Container(
+                  margin: EdgeInsets.all(ratio.width * 10),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     color: Colors.white
