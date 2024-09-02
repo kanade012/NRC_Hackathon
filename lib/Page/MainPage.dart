@@ -111,7 +111,7 @@ class _MainPageState extends State<MainPage> {
 
     await flutterLocalNotificationsPlugin.show(
       0, // Notification ID
-      '소리 감지', // 제목
+      '소리 감지 : ', // 제목
       result, // 내용
       platformChannelSpecifics,
       payload: 'MainPage', // 알림을 눌렀을 때 전달할 페이로드
@@ -182,10 +182,6 @@ class _MainPageState extends State<MainPage> {
         setState(() {
           _detectionResult = "대화";
         });
-        print("Notification: 대화");
-        if (settingsProvider.Alarm == 1) {
-          await _showNotification(_detectionResult);
-        }
         await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex >= 316 && maxIndex <= 319 || maxIndex == 390) {
         setState(() {
