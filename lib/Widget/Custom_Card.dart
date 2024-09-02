@@ -38,7 +38,7 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
         children: [
           Text(widget.title,
               style: TextStyle(
-                  fontSize: 26,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: DelightColors.mainBlue)),
           SliderPage(
