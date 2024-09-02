@@ -3,41 +3,41 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsProvider with ChangeNotifier {
   double _vibrationIntensity = 1.0;
-  double _brightness = 1.0;
-  double _textSize = 26.0;
+  int _Alarm = 0;
   int _Mode = 0;
 
   double get vibrationIntensity => _vibrationIntensity;
   set vibrationIntensity(double value) {
     _vibrationIntensity = value;
+    updatePreferences('vibrationIntensity', value);
     notifyListeners();
   }
 
-  double get brightness => _brightness;
-  set brightness(double value) {
-    _brightness = value;
-    notifyListeners();
-  }
-
-  double get textSize => _textSize;
-  set textSize(double value) {
-    _textSize = value;
+  int get Alarm => _Alarm;
+  set Alarm(int value) {
+    _Alarm = value;
+    updatePreferences('Alarm', value);
     notifyListeners();
   }
 
   int get Mode => _Mode;
   set Mode(int value) {
     _Mode = value;
+    updatePreferences('Mode', value);
     notifyListeners();
+  }
+
+  SettingsProvider() {
+    loadPreferences();
   }
 
   // SharedPreferences에서 저장된 값을 불러오는 함수
   Future<void> loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    vibrationIntensity = prefs.getDouble('vibrationIntensity') ?? 1.0;
-    brightness = prefs.getDouble('brightness') ?? 1.0;
-    textSize = prefs.getDouble('textSize') ?? 26.0;
-    Mode = prefs.getInt('Mode') ?? 1;
+    _vibrationIntensity = prefs.getDouble('vibrationIntensity') ?? 1.0;
+    _Alarm = prefs.getInt('Alarm') ?? 0;
+    _Mode = prefs.getInt('Mode') ?? 0;
+    notifyListeners();
   }
 
   // SharedPreferences에 값을 저장하는 함수

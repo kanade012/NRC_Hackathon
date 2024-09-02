@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:delight/Config/Setting_Provider.dart';
 import '../main.dart';
 
-
 class CustomSliderCard extends StatefulWidget {
   final String title;
   final double value;
@@ -23,16 +22,9 @@ class CustomSliderCard extends StatefulWidget {
 }
 
 class _CustomSliderCardState extends State<CustomSliderCard> {
-  late double _currentValue;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentValue = widget.value;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final settingsProvider = Provider.of<SettingsProvider>(context);
     return Container(
       margin: EdgeInsets.all(10),
       padding: EdgeInsets.all(10),
@@ -42,7 +34,7 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min, // 추가된 코드
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(widget.title,
               style: TextStyle(
@@ -50,20 +42,19 @@ class _CustomSliderCardState extends State<CustomSliderCard> {
                   fontWeight: FontWeight.bold,
                   color: DelightColors.mainBlue)),
           SliderPage(
-            value1: _currentValue,
+            value1: settingsProvider.vibrationIntensity,
             onChanged: (value) {
-              setState(() {
-                _currentValue = value;
-              });
-              widget.onChanged(value); // 부모 위젯에 값 전달
+              widget.onChanged(value);
             },
           ),
-          Text("${_currentValue.toStringAsFixed(2)}"), // 소수점 두 자리로 표시
+          Text("${settingsProvider.vibrationIntensity.toStringAsFixed(2)}"),
         ],
       ),
     );
   }
 }
+
+
 class SliderPage extends StatefulWidget {
   double value1;
   final ValueChanged<double> onChanged;
@@ -81,9 +72,10 @@ class _SliderPageState extends State<SliderPage> {
       activeColor: DelightColors.mainBlue,
       inactiveColor: DelightColors.subBlue,
       value: widget.value1,
+      min: 1,
       max: 10,
       label: widget.value1.round().toString(),
-      divisions: 10,
+      divisions: 9,
       onChanged: (value) {
         setState(() {
           widget.value1 = value;
@@ -111,15 +103,7 @@ class CustomUpDownCard extends StatefulWidget {
 }
 
 class _CustomUpDownCardState extends State<CustomUpDownCard> {
-  late int _currentValue;
 
-  @override
-  void initState() {
-    super.initState();
-    _currentValue = widget.value;
-  }
-
-  // A method to map _currentValue to the corresponding text
   String getModeText(int value) {
     switch (value) {
       case 0:
@@ -132,10 +116,9 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
         return 'Unknown';
     }
   }
-
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
     return Container(
       margin: EdgeInsets.all(ratio.width * 10),
       padding: EdgeInsets.all(ratio.width * 10),
@@ -148,7 +131,7 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
         children: [
           Text(widget.title,
               style: TextStyle(
-                  fontSize: settingsProvider.textSize,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: DelightColors.mainBlue)),
           Row(
@@ -156,10 +139,9 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
             children: [
               GestureDetector(
                 onTap: () {
-                  setState(() {
-                    if (_currentValue > 0) _currentValue -= 1;
-                  });
-                  widget.onChanged(_currentValue);
+                  if (settingsProvider.Mode > 0) {
+                    widget.onChanged(settingsProvider.Mode - 1);
+                  }
                 },
                 child: Icon(
                   CupertinoIcons.arrowtriangle_left_fill,
@@ -167,18 +149,16 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
                   size: 40,
                 ),
               ),
-              // Display text based on _currentValue
-              Text(getModeText(_currentValue),
+              Text(getModeText(settingsProvider.Mode),
                   style: TextStyle(
                     fontSize: 40,
                     color: DelightColors.mainBlue,
                   )),
               GestureDetector(
                 onTap: () {
-                  setState(() {
-                    if (_currentValue < 2) _currentValue += 1;
-                  });
-                  widget.onChanged(_currentValue);
+                  if (settingsProvider.Mode < 2) {
+                    widget.onChanged(settingsProvider.Mode + 1);
+                  }
                 },
                 child: Icon(
                   CupertinoIcons.arrowtriangle_right_fill,
@@ -197,8 +177,8 @@ class _CustomUpDownCardState extends State<CustomUpDownCard> {
 
 class CustomUpDown2Card extends StatefulWidget {
   final String title;
-  final double value;
-  final ValueChanged<double> onChanged; // 콜백 추가
+  final int value;
+  final ValueChanged<int> onChanged; // 콜백 추가
 
   CustomUpDown2Card({
     required this.title,
@@ -212,18 +192,9 @@ class CustomUpDown2Card extends StatefulWidget {
 }
 
 class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
-  late double _currentValue;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentValue = widget.value; // 초기값 설정
-  }
-
   @override
   Widget build(BuildContext context) {
-    final settingsProvider =
-    Provider.of<SettingsProvider>(context, listen: false);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
     return Container(
       margin: EdgeInsets.all(ratio.width * 10),
       padding: EdgeInsets.all(ratio.width * 10),
@@ -236,7 +207,7 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
         children: [
           Text(widget.title,
               style: TextStyle(
-                  fontSize: settingsProvider.textSize,
+                  fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: DelightColors.mainBlue)),
           Row(
@@ -244,10 +215,8 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
             children: [
               GestureDetector(
                 onTap: () {
-                  setState(() {
-                    _currentValue -= 1.0;
-                  });
-                  widget.onChanged(_currentValue); // 부모 위젯에 값 전달
+                  int newValue = settingsProvider.Alarm == 0 ? 1 : 0;
+                  widget.onChanged(newValue);
                 },
                 child: Icon(
                   CupertinoIcons.arrowtriangle_left_fill,
@@ -255,17 +224,15 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
                   size: 40,
                 ),
               ),
-              Text('가', // 업데이트된 값을 표시
+              Text(settingsProvider.Alarm == 0 ? "끔" : "켬",
                   style: TextStyle(
-                    fontSize: _currentValue, // 디자인에 맞게 폰트 크기 조정
+                    fontSize: 32,
                     color: DelightColors.mainBlue,
                   )),
               GestureDetector(
                 onTap: () {
-                  setState(() {
-                    _currentValue += 1.0;
-                  });
-                  widget.onChanged(_currentValue); // 부모 위젯에 값 전달
+                  int newValue = settingsProvider.Alarm == 0 ? 1 : 0;
+                  widget.onChanged(newValue);
                 },
                 child: Icon(
                   CupertinoIcons.arrowtriangle_right_fill,
@@ -280,3 +247,4 @@ class _CustomUpDownCard2State extends State<CustomUpDown2Card> {
     );
   }
 }
+
