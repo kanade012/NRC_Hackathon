@@ -81,9 +81,10 @@ class _SliderPageState extends State<SliderPage> {
       activeColor: DelightColors.mainBlue,
       inactiveColor: DelightColors.subBlue,
       value: widget.value1,
+      min: 1,
       max: 10,
       label: widget.value1.round().toString(),
-      divisions: 10,
+      divisions: 9,
       onChanged: (value) {
         setState(() {
           widget.value1 = value;
