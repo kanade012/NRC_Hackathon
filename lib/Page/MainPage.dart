@@ -6,6 +6,7 @@ import '../Config/Setting_Provider.dart';
 import '../main.dart';
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -13,6 +14,7 @@ import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:vibration/vibration.dart';
 import '../Widget/Custom_Card.dart';
+
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -32,6 +34,7 @@ class _MainPageState extends State<MainPage> {
   Timer? _timer;
   StreamController<Food> _streamController = StreamController<Food>();
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  static const platform = MethodChannel('com.example.delight/openbrowser');
 
   @override
   void initState() {
@@ -40,6 +43,14 @@ class _MainPageState extends State<MainPage> {
     _requestPermission();
     _initializeNotifications();
     _loadPreferences();
+  }
+
+  Future<void> _openGoogleForm() async {
+    try {
+      await platform.invokeMethod('openBrowser', {'url': 'https://forms.gle/2efThbpkJU41H57J8'});
+    } on PlatformException catch (e) {
+      print("Failed to open browser: '${e.message}'.");
+    }
   }
 
   Future<void> _requestPermission() async {
@@ -389,7 +400,8 @@ class _MainPageState extends State<MainPage> {
                         fontStyle: FontStyle.italic),
                   ),
                 ),
-                Spacer()
+                Spacer(),
+                IconButton(onPressed: () => _openGoogleForm(), icon: Icon(Icons.email_outlined))
               ],
             ),
           ),
