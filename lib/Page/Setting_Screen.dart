@@ -67,23 +67,6 @@ class _SettingState extends State<Setting> {
     Provider.of<SettingsProvider>(context, listen: false);
     return PageView(
       children: [
-        GestureDetector(
-          onTap: () {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => MainPage()));
-          },
-          child: Scaffold(
-            backgroundColor: DelightColors.background,
-            body: Container(
-              child: Center(
-                  child: Icon(
-                    Icons.arrow_back,
-                    size: ratio.width * 200,
-                    color: DelightColors.grey1,
-                  )),
-            ),
-          ),
-        ),
         Scaffold(
           backgroundColor: Colors.white,
           body: Column(
@@ -155,7 +138,24 @@ class _SettingState extends State<Setting> {
                   },
                 ),
               ],
-            ))
+            )),
+        GestureDetector(
+          onTap: () {
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => MainPage()));
+          },
+          child: Scaffold(
+            backgroundColor: DelightColors.background,
+            body: Container(
+              child: Center(
+                  child: Icon(
+                    Icons.arrow_back,
+                    size: ratio.width * 200,
+                    color: DelightColors.grey1,
+                  )),
+            ),
+          ),
+        ),
       ],
     );
   }
