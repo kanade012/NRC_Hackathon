@@ -383,104 +383,106 @@ class _MainPageState extends State<MainPage> {
     Provider.of<SettingsProvider>(context, listen: false);
     return Scaffold(
       backgroundColor: DelightColors.background,
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.only(top: ratio.height * 30),
-            child: Row(
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(left: ratio.width * 10),
-                  child: Text(
-                    "Haptic Hear",
-                    style: TextStyle(
-                        color: DelightColors.darkgrey,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        fontStyle: FontStyle.italic),
-                  ),
-                ),
-                Spacer(),
-                IconButton(onPressed: () => _openGoogleForm(), icon: Icon(Icons.email_outlined))
-              ],
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.all(ratio.width * 10),
-            padding: EdgeInsets.only(top: ratio.height * 35),
-            width: double.infinity,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    width: ratio.width * 3, color: DelightColors.grey1)),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Text(
-                  _detectionResult,
-                  style: TextStyle(
-                      fontSize: 32,
-                      color: DelightColors.grey1,
-                      fontWeight: FontWeight.w900),
-                ),
-                Container(
-                    height: ratio.height * 100, child: SoundWaveformWidget())
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(left: ratio.width * 10),
-                child: Text("설정 관리",
-                    style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: DelightColors.mainBlue)),
-              ),
-              Spacer()
-            ],
-          ),
-          Expanded(
-            child: Container(
-              margin: EdgeInsets.all(ratio.width * 10),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12), color: Colors.white),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.only(top: ratio.height * 30),
+              child: Row(
                 children: [
-                  CustomUpDownCard(
-                    title: "모드 전환",
-                    value: settingsProvider.Mode,
-                    onChanged: (value) {
-                      setState(() {
-                        settingsProvider.Mode = value;
-                      });
-                    },
+                  Padding(
+                    padding: EdgeInsets.only(left: ratio.width * 10),
+                    child: Text(
+                      "Haptic Hear",
+                      style: TextStyle(
+                          color: DelightColors.darkgrey,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: FontStyle.italic),
+                    ),
                   ),
-                  CustomSliderCard(
-                    title: "진동세기",
-                    value: settingsProvider.vibrationIntensity,
-                    onChanged: (value) {
-                      setState(() {
-                        settingsProvider.vibrationIntensity = value;
-                      });
-                    },
-                  ),
-                  CustomUpDown2Card(
-                    title: "백그라운드 알람 수신",
-                    value: settingsProvider.Alarm,
-                    onChanged: (value) {
-                      setState(() {
-                        settingsProvider.Alarm = value;
-                      });
-                    },
-                  ),
+                  Spacer(),
+                  IconButton(onPressed: () => _openGoogleForm(), icon: Icon(Icons.email_outlined))
                 ],
               ),
             ),
-          )
-        ],
+            Container(
+              margin: EdgeInsets.all(ratio.width * 10),
+              padding: EdgeInsets.only(top: ratio.height * 35),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      width: ratio.width * 3, color: DelightColors.grey1)),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    _detectionResult,
+                    style: TextStyle(
+                        fontSize: 32,
+                        color: DelightColors.grey1,
+                        fontWeight: FontWeight.w900),
+                  ),
+                  Container(
+                      height: ratio.height * 100, child: SoundWaveformWidget())
+                ],
+              ),
+            ),
+            Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(left: ratio.width * 10),
+                  child: Text("설정 관리",
+                      style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: DelightColors.mainBlue)),
+                ),
+                Spacer()
+              ],
+            ),
+            Expanded(
+              child: Container(
+                margin: EdgeInsets.all(ratio.width * 10),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12), color: Colors.white),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    CustomUpDownCard(
+                      title: "모드 전환",
+                      value: settingsProvider.Mode,
+                      onChanged: (value) {
+                        setState(() {
+                          settingsProvider.Mode = value;
+                        });
+                      },
+                    ),
+                    CustomSliderCard(
+                      title: "진동세기",
+                      value: settingsProvider.vibrationIntensity,
+                      onChanged: (value) {
+                        setState(() {
+                          settingsProvider.vibrationIntensity = value;
+                        });
+                      },
+                    ),
+                    CustomUpDown2Card(
+                      title: "백그라운드 알람 수신",
+                      value: settingsProvider.Alarm,
+                      onChanged: (value) {
+                        setState(() {
+                          settingsProvider.Alarm = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
