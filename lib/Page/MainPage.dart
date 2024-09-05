@@ -193,7 +193,6 @@ class _MainPageState extends State<MainPage> {
         setState(() {
           _detectionResult = "대화";
         });
-        await _triggerVibration2(settingsProvider.vibrationIntensity);
       } else if (maxIndex >= 316 && maxIndex <= 319 || maxIndex == 390) {
         setState(() {
           _detectionResult = "사이렌";
