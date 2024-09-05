@@ -22,7 +22,6 @@ class _MainPageState extends State<MainPage> {
   }
 
   // SharedPreferences에서 저장된 값을 불러오는 함수
-  // SharedPreferences에서 저장된 값을 불러오는 함수
   Future<void> _loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final settingsProvider =
